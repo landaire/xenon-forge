@@ -7,11 +7,13 @@ Xenon Forge is a buck2/LLVM-based toolchain for Xbox 360. This repo was original
 
 The toolchain has three main custom things to it:
 
-1. The Xbox 360 Xenon processor is a 64-bit processor running in 32-bit mode. LLVM doesn't really support this today, its PPC64 support is generally pretty broken, and PPC32 only emits ELF32 binaries. To get the binaries running on an Xbox 360, we statically rewrite from ELF32 to PE then pack that as an XEX2 using [`xex-link`](/crates/xex-link).
+1. The Xbox 360 Xenon processor is a 64-bit processor running in 32-bit mode. LLVM doesn't really support this today, its PPC64 support is generally pretty broken, and LLVM only emits ELF32 for PPC32 binaries. To get the binaries running on an Xbox 360, we statically rewrite from ELF32 to PE then pack that as an XEX2 using [`xex-link`](/crates/xex-link).
 2. **Optional**: For Rust, [we must patch `stdlib`](/toolchain/rust-std-xbox360) to enlighten the standard library about Rust APIs (filesystem, networking, etc.)
 3. **Optional**: For proper Xenon processor support, [we have a fork of LLVM](https://github.com/llvm/llvm-project/compare/main...landaire-contrib:llvm-project:xbox360-abi-upstream-complete) which fixes some bugs in the PPC backend, adds support for PPC64-ILP32 (modeled off how MSVC emits code for Xenon), and also adds support for VMX128 instructions.
 
 In order to use this toolchain you ONLY need [`buck2`](https://buck2.build/) for the build system, and a Rust compiler. In general, `buck2` will take care of resolving all dependencies (even the compilers), so all you need to do is run `bin/buck2` to get started.
+
+In general I have attempted to provide prebuilt binaries (built by GitHub actions) for most components to reduce the annoyances put on you.
 
 ## Usage
 
@@ -24,7 +26,11 @@ As outlined [below](#components), there are quite a few components to this toolc
 
 In general, you need to use `buck2` for building. I recommend just using `bin/buck2` / `bin/buck2.cmd` as this will download the `20216-10-15` version which the project has been tested against (newer versions might have some breakage).
 
+## Nix
+
 If you are a `nix` user, you can use `nix develop` to set up all requirements automatically. If you use `devenv`, run `devenv allow`. Otherwise, see below.
+
+## Non-Nix
 
 You will need, somewhere in your `$PATH` on Unix:
 
@@ -43,7 +49,7 @@ On Windows:
 - `clang.exe` in your `$PATH` if you wish to use C
 
 > [!CAUTION]
-> Running any of the build commands will likely download dependencies. See the [bootstrap scripts](/bootstrap.ps1), the [`buck2` dotdlash config](/toolchains/buck2), and [prebuilt toolchain download](https://github.com/landaire/xenon-forge/blob/c936579923a06ce3b2338cf205b4f40308c8e23c/buck/custom_toolchain.bzl#L42-L55).
+> Running any of the build commands will likely download hash-pinned dependencies. See the [bootstrap scripts](/bootstrap.ps1), the [`buck2` dotdlash config](/toolchains/buck2), and [prebuilt toolchain download](https://github.com/landaire/xenon-forge/blob/c936579923a06ce3b2338cf205b4f40308c8e23c/buck/custom_toolchain.bzl#L42-L55).
 
 On a Unix system run:
 
@@ -63,26 +69,26 @@ You can set some settings in your `.buckconfig.local` file (create it if it does
 
 ```toml
 [xbox360]
-  console_xbdm = console_name_or_ip
-  xbdm_tool = /path/to/xeedee
+  console_xbdm = "console_name_or_ip"
+  xbdm_tool = "/path/to/xeedee"
 ```
 
 And the following optional keys:
 
 ```toml
 [xbox360]
-  deploy_directory = DEVKIT:\MyTitle
+  deploy_directory = "DEVKIT:\\MyTitle"
 
-  kd_tool = /path/to/openxbdm-kd
-  console_kd_target = 192.168.1.27
+  kd_tool = "/path/to/openxbdm-kd"
+  console_kd_target = "192.168.1.27"
 
-  gdb_tool = /path/to/powerpc-gdb
-  gdb_listen = 127.0.0.1:2159
+  gdb_tool = "/path/to/powerpc-gdb"
+  gdb_listen = "127.0.0.1:2159"
 ```
 
 This will allow you to build, deploy, and run directly to your console:
 
-```
+```shell
 bin/buck2 run //examples/hello:hello
 
 # With arguments
@@ -103,7 +109,7 @@ If running the `[debug] flavor:
 
 You can also debug from something like VS Code using:
 
-```
+```shell
 bin/buck2 build //games:launcher[vscode] --show-output
 ```
 
@@ -117,11 +123,13 @@ bin/buck2 build //games:launcher[vscode] --show-output
 
 ### xex-link
 
-Since LLVM at this time doesn't know how to emit a PowerPC Portable Executable (PE), we must emit an ELF and do the conversion process ourself. LLVM obviously does not, and likely will never (for legal reasons (encryption keys)), emit an XEX either. xex-link handles the conversion of an ELF -> PE -> XEX all in one step.
+Since LLVM at this time doesn't know how to emit a PowerPC Portable Executable (PE), we must emit an ELF and do the conversion process ourself.
+
+LLVM obviously does not, and likely will never (for legal reasons (encryption keys)), emit an XEX either. xex-link handles the conversion of an ELF -> PE -> XEX all in one step.
 
 Example usage:
 
-```toml
+```shell
 xex-link input.elf output.xex \
   --manifest xex.toml \
   --resource SHADER=<artifact path> \
