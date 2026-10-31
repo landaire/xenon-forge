@@ -139,6 +139,18 @@ You can also debug from something like VS Code using:
 bin/buck2 build //games:launcher[vscode] --show-output
 ```
 
+### PPC64
+
+If you wish to target PPC64, you can use any of the standard `buck2` commands and explicitly pass `--target-platforms xbox360//platforms:ppc64`.
+
+For example:
+
+```shell
+bin/buck2 build //examples/hello:hello --target-platforms xbox360//platforms:ppc64 --show-output
+```
+
+This will grab and/or build the required custom LLVM toolchain.
+
 ## Components
 
 - [`xex-link`](/src/crates/xex-link) converts an ELF to XEX
