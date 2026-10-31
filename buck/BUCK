@@ -1,3 +1,7 @@
+load(":openxbdm_tools.bzl", "openxbdm_host_tools")
+
+openxbdm_host_tools()
+
 export_file(
     name = "assemble_library_source.py",
     visibility = ["PUBLIC"],

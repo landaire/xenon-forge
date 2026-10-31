@@ -74,6 +74,8 @@ missing_optional() {
 }
 
 check_host_tools() {
+    have git || missing_required git "required. Buck2 fetches external cells with git."
+
     # Host executables: xex-link and xbox360-asm-rewrite.
     case $(uname -s) in
     Linux)
@@ -89,7 +91,7 @@ check_host_tools() {
     clang --print-targets 2>/dev/null | grep -q '^ *ppc32 ' ||
         missing_optional clang "PPC32 C titles need clang with the PowerPC target on the PATH of the Buck2 daemon."
     python3 -c 'import sys; sys.exit(sys.version_info < (3, 11))' 2>/dev/null ||
-        missing_optional python3 "the buck/update_*.py scripts need Python 3.11 or later."
+        missing_required python3 "Buck build and run actions need Python 3.11 or later."
 
     if ! have cargo || ! have rustup; then
         missing_optional "Cargo toolchain" "Cargo builds need rustup, Cargo, Rust 1.98.0, and its rust-src component."
@@ -107,7 +109,6 @@ check_host_tools() {
         have ar || missing_optional ar "PPC64 builds need binutils."
         have ranlib || missing_optional ranlib "PPC64 builds need binutils."
         have unzip || missing_optional unzip "PPC64 builds need unzip."
-        have python3 || missing_optional python3 "PPC64 builds need Python 3."
     fi
 
     if [ -n "${required_missing:-}" ]; then

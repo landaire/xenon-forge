@@ -102,6 +102,10 @@ function Write-MissingOptional($Tool, $Reason) {
 }
 
 function Test-HostTools($Architecture) {
+    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+        Write-MissingRequired "git" "required. Buck2 fetches external cells with git."
+    }
+
     # Host executables: xex-link and xbox360-asm-rewrite.
     $component = if ($Architecture -eq "ARM64") {
         "Microsoft.VisualStudio.Component.VC.Tools.ARM64"
@@ -144,7 +148,7 @@ function Test-HostTools($Architecture) {
         }
     }
     if (-not $pythonFound) {
-        Write-MissingOptional "python" "the buck\update_*.py scripts need Python 3.11 or later."
+        Write-MissingRequired "python" "Buck build and run actions need Python 3.11 or later."
     }
 
     $cargo = Get-Command cargo -ErrorAction SilentlyContinue

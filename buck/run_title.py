@@ -7,6 +7,7 @@ import argparse
 import errno
 import os
 from pathlib import Path
+import shutil
 import socket
 import subprocess
 import sys
@@ -38,6 +39,10 @@ def remote_parts(path: str) -> tuple[str, list[str]]:
     if not parts:
         raise ValueError(f"remote directory {path!r} must be below the drive root")
     return drive, parts
+
+
+def resolve_tool(configured: str | None, name: str, fallback: str) -> str:
+    return configured or shutil.which(name) or fallback
 
 
 def xeedee_command(tool: str, host: str, *arguments: str) -> list[str]:
@@ -247,12 +252,14 @@ def debug(
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", help="XBDM console host from xbox360.console_xbdm")
-    parser.add_argument("--xbdm-tool", default="xeedee")
+    parser.add_argument("--xbdm-tool")
+    parser.add_argument("--fallback-xbdm-tool", required=True)
     parser.add_argument("--directory")
     debugger = parser.add_mutually_exclusive_group()
     debugger.add_argument("--debug", action="store_true")
     debugger.add_argument("--debug-server", action="store_true")
-    parser.add_argument("--kd-tool", default="openxbdm-kd")
+    parser.add_argument("--kd-tool")
+    parser.add_argument("--fallback-kd-tool", required=True)
     parser.add_argument("--kd-target")
     parser.add_argument("--gdb", default="gdb")
     parser.add_argument("--gdb-commands", type=Path)
@@ -272,14 +279,21 @@ def main() -> int:
         )
     if arguments.debug and arguments.gdb_commands is None:
         raise SystemExit("run_title.py: --debug requires --gdb-commands")
+
+    xbdm_tool = resolve_tool(
+        arguments.xbdm_tool, "xeedee", arguments.fallback_xbdm_tool
+    )
+    kd_tool = resolve_tool(
+        arguments.kd_tool, "openxbdm-kd", arguments.fallback_kd_tool
+    )
     if arguments.debug or arguments.debug_server:
         print("starting Xbox 360 debugger", flush=True)
 
     directory = remote_directory(arguments.directory, arguments.xex)
-    remote = deploy(arguments.xbdm_tool, arguments.host, directory, arguments.xex)
+    remote = deploy(xbdm_tool, arguments.host, directory, arguments.xex)
     if not (arguments.debug or arguments.debug_server):
         launch(
-            arguments.xbdm_tool,
+            xbdm_tool,
             arguments.host,
             directory,
             remote,
@@ -287,13 +301,13 @@ def main() -> int:
         )
         return 0
     return debug(
-        arguments.kd_tool,
+        kd_tool,
         arguments.kd_target,
         None if arguments.debug_server else arguments.gdb,
         arguments.gdb_commands,
         arguments.listen,
         arguments.registers,
-        arguments.xbdm_tool,
+        xbdm_tool,
         arguments.host,
         directory,
         remote,
