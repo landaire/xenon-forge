@@ -26,27 +26,18 @@ _HOSTS = {
 }
 
 
-def _host_value(values, unsupported):
-    return select({
-        "prelude//os:linux": select({
-            "prelude//cpu:x86_64": values["linux-x86_64"],
-            "DEFAULT": unsupported,
-        }),
-        "prelude//os:macos": select({
-            "prelude//cpu:arm64": values["macos-aarch64"],
-            "DEFAULT": unsupported,
-        }),
-        "prelude//os:windows": select({
-            "prelude//cpu:x86_64": values["windows-x86_64"],
-            "DEFAULT": unsupported,
-        }),
-        "DEFAULT": unsupported,
-    })
+def _host_key():
+    info = host_info()
+    if info.os.is_linux and info.arch.is_x86_64:
+        return "linux-x86_64"
+    if info.os.is_macos and info.arch.is_aarch64:
+        return "macos-aarch64"
+    if info.os.is_windows and info.arch.is_x86_64:
+        return "windows-x86_64"
+    fail("downloaded openxbdm tools support Linux x86_64, macOS aarch64, and Windows x86_64; configure xbox360.xbdm_tool and xbox360.kd_tool on this host")
 
 
 def _archive_tool_impl(ctx):
-    if ctx.attrs.archive == None:
-        fail("downloaded openxbdm tools support Linux x86_64, macOS aarch64, and Windows x86_64; configure xbox360.xbdm_tool and xbox360.kd_tool on this host")
     return [
         DefaultInfo(),
         RunInfo(args = cmd_args(ctx.attrs.archive, format = "{}/" + ctx.attrs.path)),
@@ -56,27 +47,25 @@ def _archive_tool_impl(ctx):
 _archive_tool = rule(
     impl = _archive_tool_impl,
     attrs = {
-        "archive": attrs.option(attrs.source(), default = None),
+        "archive": attrs.source(),
         "path": attrs.string(),
     },
 )
 
 
 def openxbdm_host_tools():
-    for host, release in _HOSTS.items():
-        native.http_archive(
-            name = "openxbdm-tools-" + host,
-            sha256 = release.sha256,
-            strip_prefix = release.strip_prefix,
-            urls = [_RELEASE_URL + release.archive],
-        )
+    release = _HOSTS[_host_key()]
+    native.http_archive(
+        name = "openxbdm-tools",
+        sha256 = release.sha256,
+        strip_prefix = release.strip_prefix,
+        urls = [_RELEASE_URL + release.archive],
+    )
 
-    archives = {host: ":openxbdm-tools-" + host for host in _HOSTS}
     for tool in ["xeedee", "openxbdm-kd"]:
-        paths = {host: tool + release.suffix for host, release in _HOSTS.items()}
         _archive_tool(
             name = tool,
-            archive = _host_value(archives, None),
-            path = _host_value(paths, ""),
+            archive = ":openxbdm-tools",
+            path = tool + release.suffix,
             visibility = ["PUBLIC"],
         )
