@@ -1,429 +1,134 @@
-# Xbox 360 Rust and LLVM Toolchain
+# Xenon Forge
 
-A toolchain that compiles Rust (and any other LLVM language, such as C) to a XEX
-executable that runs on the Xbox 360. It replaces Microsoft's proprietary
-toolchain. The default targets 32-bit big-endian PowerPC; the experimental
-PPC64 mode uses 64-bit registers with the console's ELF32 ABI and 32-bit
-pointers. A single post-link step, `xex-link`, converts the resulting ELF into
-a devkit-signed XEX.
+> [!NOTE]  
+> This project was entirely developed by AI agents, but human-guided by someone who knows a fair amount about the Xbox 360 and the toolchain components involved. This README was written by a human. Most other documentation was not, but this will hopefully change over time.
 
-The standard library is supported through an overlay that teaches Rust std about
-the `xbox360` target. A title may therefore use `std::thread`, `std::net`,
-`std::fs`, allocation, and `println!`.
+Xenon Forge is a buck2/LLVM-based toolchain for Xbox 360. This repo was originally intended as a PoC for getting Rust running on Xbox 360, but has since evolved into a generic toolchain.
 
-## Requirements
+The toolchain has three main custom things to it:
 
-- For Buck2 builds: nothing to install beyond the host tools below. Run
-  `bin/buck2` (`bin\buck2.cmd` on Windows) wherever this file says `buck2`,
-  or add `bin` to `PATH`. Its first run runs `bootstrap.sh`
-  (`bootstrap.ps1` on Windows), which downloads
-  [DotSlash](https://dotslash-cli.com) into `.tools`, fetches the Buck2
-  release that the DotSlash file `toolchains/buck2` pins, and reports
-  missing host tools. Buck2 downloads the Rust 1.98.0 release, a CPython
-  for its own tools, and every crate it builds, and checks each download
-  against a pinned digest.
-- A C++ linker driver for the host programs (`xex-link`,
-  `xbox360-asm-rewrite`): GCC or Clang on Linux, the Xcode command line
-  tools on macOS, or Visual Studio Build Tools with the C++ workload on
-  Windows. These stay host tools: the macOS and Windows SDKs cannot be
-  redistributed. Windows also needs long paths enabled.
-- Python 3.11 or later, only for the `buck/update_*.py` scripts.
-- For Cargo builds: `rustup`, the Rust 1.98.0 toolchain, and its `rust-src`
-  component. The standard-library overlay is written against the 1.98
-  standard-library source; other versions are not supported.
-- Xenia, built separately, for verification. The helper script
-  `tools/run-xenia.sh` invokes it.
-- For C and C++ titles with the release toolchain: `clang` with the PowerPC target,
-  on the `PATH` of the Buck2 daemon. Run `buck2 kill` after changing `PATH`.
-  The PPC64 toolchain supplies its own clang.
-- For the PPC64 toolchain: an x86_64 Linux host. The prebuilt nightly is built
-  on Ubuntu 22.04 and bundles `libstdc++` and `libgcc_s`; it still requires a
-  compatible glibc. Building the toolchain from source additionally requires
-  `cc`, `c++`, binutils, `unzip`, and Python 3. Buck2 downloads CMake and Ninja.
+1. The Xbox 360 Xenon processor is a 64-bit processor running in 32-bit mode. LLVM doesn't really support this today, its PPC64 support is generally pretty broken, and PPC32 only emits ELF32 binaries. To get the binaries running on an Xbox 360, we statically rewrite from ELF32 to PE then pack that as an XEX2 using [`xex-link`](/crates/xex-link).
+2. **Optional**: For Rust, [we must patch `stdlib`](/toolchain/rust-std-xbox360) to enlighten the standard library about Rust APIs (filesystem, networking, etc.)
+3. **Optional**: For proper Xenon processor support, [we have a fork of LLVM](https://github.com/llvm/llvm-project/compare/main...landaire-contrib:llvm-project:xbox360-abi-upstream-complete) which fixes some bugs in the PPC backend, adds support for PPC64-ILP32 (modeled off how MSVC emits code for Xenon), and also adds support for VMX128 instructions.
 
-`xex-link` builds the XEX with the `xex2` and `xenon_types` crates of the [acceleration](https://github.com/landaire/acceleration) project, pinned to a Git commit.
+In order to use this toolchain you ONLY need [`buck2`](https://buck2.build/) for the build system, and a Rust compiler. In general, `buck2` will take care of resolving all dependencies (even the compilers), so all you need to do is run `bin/buck2` to get started.
 
-## Building with Buck2
+## Usage
 
-Buck2 builds the standard library from the release's `rust-src` archive with
-the overlay applied (`sysroot/BUCK`), so no installed Rust and no overlay step
-are needed:
+This repo is intended to be consumed by other `buck2` projects as an external cell, and is not meant to be directly modified. See [`xenon-forge-template`](https://github.com/landaire/xenon-forge-template) for a project you _should_ clone and start hacking on.
+
+As outlined [below](#components), there are quite a few components to this toolchain. The good news is: you don't have to worry about installing any of it! The build system will handle pulling _most_ dependencies on its own.
+
+> [!NOTE]  
+> **For Windows users**:this has only been tested on Windows 11 which is known to provide `tar.exe`. Older versions of Windows certainly do not, so some of these commands may not work. It is recommended that you read the [bootstrap script](/bootstrap.ps1) and fix it up to resolve `dotslash` if it doesn't work on its own. Once you resolve `dotslash` everything else should "just work".
+
+In general, you need to use `buck2` for building. I recommend just using `bin/buck2` / `bin/buck2.cmd` as this will download the `20216-10-15` version which the project has been tested against (newer versions might have some breakage).
+
+If you are a `nix` user, you can use `nix develop` to set up all requirements automatically. If you use `devenv`, run `devenv allow`. Otherwise, see below.
+
+You will need, somewhere in your `$PATH` on Unix:
+
+- `c++` (a compiler such as `gcc` or `clang`)
+- macOS: Xcode command-line tools and `c++`
+
+On Windows:
+
+- Visual Studio Build Tools
+    - Desktop development with C++
+    - MSVC x64/x86 or ARM64 tools matching the host
+    - Windows 10/11 SDK
+- Long paths enabled
+- PowerShell
+- Internet access for the first build
+- `clang.exe` in your `$PATH` if you wish to use C
+
+> [!CAUTION]
+> Running any of the build commands will likely download dependencies. See the [bootstrap scripts](/bootstrap.ps1), the [`buck2` dotdlash config](/toolchains/buck2), and [prebuilt toolchain download](https://github.com/landaire/xenon-forge/blob/c936579923a06ce3b2338cf205b4f40308c8e23c/buck/custom_toolchain.bzl#L42-L55).
+
+On a Unix system run:
 
 ```
-buck2 build //examples/... --show-output
+bin/buck2 build //examples/hello:hello --show-output
 ```
 
-This builds the XEX of every example. `buck2 build //examples/hello:hello`
-builds one.
-
-To move to another Buck2 release, replace `toolchains/buck2` with the `buck2` DotSlash file of that release, `https://github.com/facebook/buck2/releases/download/<tag>/buck2`. To move to another DotSlash release, change the version and SHA-256 values in both bootstrap scripts and run them again.
-
-`xbox360_title` in `buck/xex.bzl` builds a title. It compiles a Rust executable for the console, with or without the standard library, and converts it with `xex-link` (`//crates/xex-link:xex-link`) using the title's manifest. `buck2 run toolchains//:llvm-objdump -- ARGS` runs the Rust release's llvm-objdump.
-
-### Experimental PPC64 toolchain
-
-The `xbox360//platforms:codegen` constraint selects the compiler. Its default,
-`ppc32`, uses the Rust release and the `powerpc-unknown-xbox360` target.
-`ppc64-ilp32` targets `powerpc64-unknown-xbox360`. PPC32 and PPC64 builds have
-different configurations, so their outputs never share paths, and both can be
-built by one command:
+On Windows:
 
 ```
-bin/buck2 build -j 8 --target-platforms xbox360//platforms:ppc64 \
-  //examples/hello:hello //examples/stdhello:stdhello //examples/chello:chello
+bin/buck2.cmd build //examples/hello:hello --show-output
 ```
 
-A project with the prelude's configuration modifiers selects PPC64 with a
-`PACKAGE` alias for `xbox360//platforms:codegen[ppc64-ilp32]`, as in
-`//path:target?ppc64`. The `xbox360-ppc64-ilp32-*` platforms configure the
-standard library crates directly.
+### Advanced Usage
 
-`xbox360.ppc64_toolchain` selects where the PPC64 compiler comes from:
+You can set some settings in your `.buckconfig.local` file (create it if it doesn't exist) that allow for advanced build steps:
 
-- `source` is the default on the default branch. The `rustc_bootstrap` cell
-  builds Rust 1.98 and the pinned LLVM, clang, and LLD. The cell downloads the
-  Rust fork, its `library/backtrace` submodule, LLVM, CMake, and Ninja as
-  SHA-256-pinned archives; `stage0/custom_llvm.bzl` pins LLVM.
-- `prebuilt` downloads one SHA-256-pinned archive containing `rustc`,
-  `rustdoc`, `clippy-driver`, clang, clang++, LLD, the LLVM object tools, the
-  host Rust sysroot, clang resource headers, and the PPC64 target
-  specification. Rust and LLVM toolchain targets consume the same extracted
-  directory.
-
-The first source build compiles LLVM (about 25 minutes with 8 jobs) and then
-rustc. LLVM uses a local CMake/Ninja action that is never uploaded to a cache;
-`xbox360.toolchain_jobs` sets its job count (default 8). Its build tree persists
-in `$XDG_CACHE_HOME/buck2-rustc-bootstrap/xbox360-llvm` (or under `~/.cache`),
-keyed by the build configuration. Building rustc needs several GB of memory per
-job; pass `-j` to Buck2 on a memory-constrained host.
-
-In PPC64 configurations, host crates (proc macros, build scripts, and tools)
-use the same source-built or prebuilt compiler on the
-`xbox360//platforms:host-ppc64` execution platform. Host targets in the default
-configuration keep the Rust release and host C++ toolchain.
-
-#### Nightly prebuilt toolchain
-
-`.github/workflows/nightly-toolchain.yml` fingerprints the inputs to the
-source toolchain on x86_64 Linux. The fingerprint covers the bootstrap commit
-and its pinned Rust and LLVM commits, the Xbox target specification, and
-relevant Buck2 and packaging code. Scheduled runs skip the expensive build
-when that fingerprint is already published, so unrelated changes to the default
-branch do not rebuild the toolchain.
-
-Each build publishes its large `.tar.xz` archive under an immutable
-`toolchain-nightly-<input-hash>` release. The moving `toolchain-nightly`
-pre-release contains only its manifest, Buck2 pin, config snippet, and
-DotSlash descriptors; those files point at the immutable archive. The manifest
-records the complete fingerprint, integration, bootstrap, Rust, and LLVM
-commits plus SHA-256 and BLAKE3 digests.
-
-The workflow also force-updates the generated `nightly-toolchain` branch to the
-source commit plus one `Update nightly toolchain` commit. That commit pins the
-new archive and defaults `xbox360.ppc64_toolchain` to `prebuilt`. The default
-branch remains source-built. Because the workflow is scheduled/manual and
-compares the current toolchain-input fingerprint with the published manifest,
-publishing the generated branch cannot trigger an infinite nightly-build loop.
-
-An external project can pin its `xbox360` cell to the commit at the tip of
-`nightly-toolchain`. In this checkout:
-
-```
-git fetch origin nightly-toolchain
-git switch --detach origin/nightly-toolchain
-bin/buck2 build --target-platforms xbox360//platforms:ppc64 \
-  //examples/hello:hello
+```toml
+[xbox360]
+  console_xbdm = console_name_or_ip
+  xbdm_tool = /path/to/xeedee
 ```
 
-The generated branch also runs the same archive directly through DotSlash:
+And the following optional keys:
 
-```
-.tools/bin/dotslash toolchains/xbox360-rustc --version
-.tools/bin/dotslash toolchains/xbox360-clang --version
-.tools/bin/dotslash 'toolchains/xbox360-clang++' --version
-```
+```toml
+[xbox360]
+  deploy_directory = DEVKIT:\MyTitle
 
-To use a particular archive without switching branches, merge the
-`xbox360-toolchain.buckconfig` snippet from its release into
-`.buckconfig.local`. The URL, SHA-256, and archive root in that snippet override
-the checked-in pin.
+  kd_tool = /path/to/openxbdm-kd
+  console_kd_target = 192.168.1.27
 
-To work on the bootstrap, check it out at `toolchain/buck2-rustc-bootstrap`
-and add this to `.buckconfig.local`:
-
-```ini
-[external_cells]
-  rustc_bootstrap = disabled
+  gdb_tool = /path/to/powerpc-gdb
+  gdb_listen = 127.0.0.1:2159
 ```
 
-`toolchains//:clang`, `toolchains//:rust-lld`, `toolchains//:llvm-objdump`,
-and `toolchains//:llvm-objcopy` select their PPC32 or PPC64 tool by the same
-constraint.
-
-[buck2-rustc-bootstrap]: https://github.com/landaire-contrib/buck2-rustc-bootstrap
-
-The PPC64 target enables AltiVec and VMX128: LLVM allocates all 128 vector
-registers and passes 16-byte vectors in v1-v13 as the console compiler does.
-`docs/xenon-instructions.md` describes the convention, and the
-`xbox360-vmx128` crate the VMX128-only operations.
-
-The PPC64 build still produces big-endian `elf32-powerpc` intermediates and
-32-bit addresses. Its ABI bridges use 64-bit `std` and `ld` instructions to
-preserve the full nonvolatile registers. The final targets remain XEX files.
-
-Pass `rewrite = True` to make the title smaller. The executable is then compiled as one fat LTO unit, and `xbox360-asm-rewrite` replaces the register saves and restores in each function's prologue and epilogue with calls to shared helper routines, as Microsoft's compiler does. The build fails if the relinked image differs from the one rustc links, or if a rewritable sequence remains. `examples/stdhello` uses it. The `[rewrite-report]` and `[refusals]` subtargets show what changed and what was left alone.
-
-Pass `std = "system"` instead of `std = True` for a system module, a XEX without the `TITLE` module flag that runs in the system process. The executable then links the standard library for system modules (`xbox360//sysroot:std-system`, built with `--cfg xbox360_system`). Its `std::thread` threads start in the system process, so they keep running when the title exits, and its sockets open as the system rather than as the title. Its thread locals take TLS slots of the system process, which never exits. The module returns them with `std::os::xbox360::release_tls_slots` when it unloads. `toolchain/rust-std-xbox360/README.md` has the details.
-
-Every title build also fails if the image holds an `lwarx`, `ldarx`, `stwcx.` or `stdcx.` outside the interrupt-protected form. The devkit kernel loader reports those as unprotected. `xbox360_sys::interlocked` has operations in the protected form.
-
-For projects that generate their own build files, `xbox360_executable_core`, `xbox360_executable_std`, `xbox360_executable_std_system` and `xex_from_assembly` are the rules behind `rewrite`.
-
-### Debugging
-
-Every title keeps its symbols and debug information in its ELF, including with `rewrite`. The XEX does not carry them, so it does not grow.
-
-- `[elf]` is the ELF. Its addresses are the addresses the console loads the title at, so a debugger uses it as is.
-- `[gdb]` and `[lldb]` are command files that load the ELF and find the standard library source.
-
-On a devkit with kdnet enabled, `openxbdm-kd` from [xeedee](https://github.com/landaire/xeedee) serves the console's kernel debugger to GDB or LLDB. Titles are 32-bit PowerPC code, so start it with `--registers 32`. `--stop-on-load` holds the title after it loads and before it runs, so you can set breakpoints first. Run the debugger from the repository root, because the source paths in the debug information are relative to it:
+This will allow you to build, deploy, and run directly to your console:
 
 ```
-openxbdm-kd gdbserver --registers 32 --stop-on-load stdhello.xex
-gdb -x "$(buck2 build //examples/stdhello:stdhello[gdb] --show-simple-output)" -ex 'target remote 127.0.0.1:2159'
-lldb -s "$(buck2 build //examples/stdhello:stdhello[lldb] --show-simple-output)" -o 'gdb-remote 127.0.0.1:2159'
+bin/buck2 run //examples/hello:hello
+
+# With arguments
+bin/buck2 run //examples/hello:hello -- first "second argument"
+
+# Debug
+bin/buck2 run //examples/stdhello:stdhello[debug]
 ```
 
-With Cargo, the examples' release profile keeps debug information (`debug = "full"`). Load the ELF from `target/powerpc-unknown-xbox360/release`.
+If running the `[debug] flavor:
 
-### Libraries
+1. Uploads the XEX.
+2. Starts `openxbdm-kd` with 32-bit registers and a load stop.
+3. Waits until the KD GDB server is armed.
+4. Launches the title through `xeedee`.
+5. Waits until the title is mapped and stopped before its entry point.
+6. Opens GDB with the title ELF, source mappings, big-endian mode, and the PowerPC architecture.
 
-Use std when you can. For what std does not cover, or for code without std, two crates are published on crates.io:
-
-- [`xbox360-sys`](crates/xbox360-sys): raw kernel and XAM imports, exports, entries for callers that use the console ABI, and the interlocked operations the kernel loader accepts. std builds on it.
-- [`xbox360`](crates/xbox360): safe wrappers on top of it, such as kernel events and locks, threads without std, controller input and saved-game content.
-
-### From another Buck2 project
-
-A project that builds for the host and the console uses this repository as
-the `xbox360` external cell, pinned to a commit, together with the
-`rustc_bootstrap` cell named in this repository's `.buckconfig` (the PPC64
-toolchain refers to it; PPC32 builds only read its configuration targets)
-and this repository's execution platforms:
-
-```ini
-[cells]
-  xbox360 = rust-xbox360
-  rustc_bootstrap = buck2-rustc-bootstrap
-
-[external_cells]
-  xbox360 = git
-  rustc_bootstrap = git
-
-[external_cell_xbox360]
-  git_origin = https://github.com/landaire/rust-xbox360
-  commit_hash = <commit>
-
-[external_cell_rustc_bootstrap]
-  git_origin = https://github.com/landaire-contrib/buck2-rustc-bootstrap
-  commit_hash = <the commit in this repository's .buckconfig>
-
-[build]
-  execution_platforms = xbox360//platforms:execution
-```
-
-Its `toolchains/BUCK` calls `xbox360_toolchains()` from `@xbox360//buck:toolchains.bzl`, which takes the project's rustc and rustdoc flags for host and console crates. The target constraint is `xbox360//platforms:target`, with the generated `[host]` and `[xbox]` values. Console targets use `xbox360_title`, or the `xbox360//platforms:xbox360-core`, `-std` and `-std-system` configurations through the transitions in `buck/platforms.bzl`.
-
-To build a target with the PPC64 toolchain, add a modifier alias for
-`xbox360//platforms:codegen[ppc64-ilp32]` to the project's root `PACKAGE` and
-build `//path:target?ppc64`; see "Experimental PPC64 toolchain" above.
-
-`@xbox360//buck:profiles.bzl` provides dev, release and symbol-free release flags for the shared `xbox360//platforms:mode` constraint. A project may expose it as `//config:mode` with an `alias`, but its `PACKAGE` modifier aliases must name `xbox360//platforms:mode[dev]`, `[release]` and `[release-no-symbols]` directly. Its `profiled_rust_binary` keeps Linux debug information in the `[symbols]` subtarget and leaves the executable stripped. The project's `rust-toolchain.toml` should name the release in `buck/rust_release.bzl`; `buck/update_rust_release.py --check PATH` compares them.
-
-## Getting started with Cargo
-
-This procedure assumes no prior experience modifying the Rust toolchain. It
-proceeds from a machine with nothing installed to a running title. Commands are
-run from the repository root unless stated otherwise.
-
-### 1. Install Rust
-
-Install `rustup` by following the instructions at https://rustup.rs. Then install
-the required toolchain and components:
+You can also debug from something like VS Code using:
 
 ```
-rustup toolchain install 1.98.0
-rustup component add rust-src --toolchain 1.98.0
+bin/buck2 build //games:launcher[vscode] --show-output
 ```
 
-Direct this repository to use that toolchain. Run this once, in the repository
-root:
+## Components
 
-```
-rustup override set 1.98.0
-```
+- [`xex-link`](/crates/xex-link) converts an ELF to XEX
+- [`xbox360-asm-rewrite`](/crates/xbox360-asm-rewrite) contains multiple features, but is mostly used for rewriting some suboptimal assembly patterns LLVM emits (such as using common functions for saving/restoring GPRs)
+- [rust-std-xbox360](/toolchain/rust-std-xbox360) enlightens the Rust stdlib to be Xenon-aware
+- [/crates/xbox360*](/crates) provides Xbox 360 SDK support to Rust. Currently at this time includes GPU, video, XAM, and direct system `extern` APIs for invoking threads, networking, etc. without `stdlib`.
+- [LLVM fork](https://github.com/llvm/llvm-project/compare/main...landaire-contrib:llvm-project:xbox360-abi-upstream-complete) (see below)[#llvm-fork].
 
-### 2. Install the standard-library overlay
+### xex-link
 
-`toolchain/rust-std-xbox360/library` holds the overlay as complete files of
-the standard-library source: the Xbox 360 backend and the files with its
-dispatch edits. Copy it over the toolchain's standard-library source once
-(repeat it after every `rustup update` or `rustup component add rust-src`,
-which restore the pristine source):
+Since LLVM at this time doesn't know how to emit a PowerPC Portable Executable (PE), we must emit an ELF and do the conversion process ourself. LLVM obviously does not, and likely will never (for legal reasons (encryption keys)), emit an XEX either. xex-link handles the conversion of an ELF -> PE -> XEX all in one step.
 
-```
-cp -R toolchain/rust-std-xbox360/library/. "$(rustc --print sysroot)/lib/rustlib/src/rust/library/"
-```
+Example usage:
 
-The edits apply only to the `xbox360` target and are inert for all others.
-
-### 3. Build the linker
-
-`xex-link` is a host program that converts an ELF into a XEX:
-
-```
-cargo build -p xex-link
+```toml
+xex-link input.elf output.xex \
+  --manifest xex.toml \
+  --resource SHADER=<artifact path> \
+  --resource FONT=<artifact path>
 ```
 
-The binary is written to `target/debug/xex-link`.
-
-### 4. Compile and run a title without the standard library
-
-Each Rust example except `library-check` is a self-contained crate that selects the target and linker script through its `.cargo/config.toml`. Because the target is a specification file and the build compiles part of the library from source, the build requires `RUSTC_BOOTSTRAP=1` and `-Zjson-target-spec`.
-
-Compile the `hello` example to an ELF executable:
-
-```
-cd examples/hello
-RUSTC_BOOTSTRAP=1 cargo build --release -Zjson-target-spec
-```
-
-The ELF is written to `target/powerpc-unknown-xbox360/release/hello`. Convert it
-to a XEX with the metadata in the example's `xex.toml`:
-
-```
-../../target/debug/xex-link \
-  target/powerpc-unknown-xbox360/release/hello hello.xex \
-  --manifest xex.toml
-```
-
-Run it under Xenia:
-
-```
-../../tools/run-xenia.sh hello.xex --gpu=null --apu=nop
-```
-
-### 5. Compile and run a title with the standard library
-
-Standard-library titles additionally build the standard library from the
-overlaid source. Compile the `stdhello` example:
-
-```
-cd examples/stdhello
-RUSTC_BOOTSTRAP=1 cargo build --release -Zbuild-std=std,panic_abort -Zjson-target-spec
-```
-
-The first build compiles the standard library and takes several minutes;
-subsequent builds reuse the cached result. Convert and run it as in step 4.
-
-If you edit the overlay after building, delete the standard-library build cache
-before rebuilding; Cargo does not detect changes to the overlaid source:
-
-```
-rm -rf "${CARGO_HOME:-$HOME/.cargo}/build/powerpc-unknown-xbox360"
-```
-
-Copy the edited files into the toolchain source first, as in step 2.
-
-## Size cost of the standard library
-
-Console memory is shared with the running title, so every kilobyte of a module counts. These numbers come from [openxbdm](https://github.com/landaire/xeedee), a debug monitor module that takes about 890 KiB once loaded. It calls no std API, so the growth is what std costs before you use it. Each build uses `-Copt-level=z`, one fat LTO unit and `rewrite`.
-
-![Loaded image of openxbdm by section](docs/std-size-image.svg)
-
-![XEX file of openxbdm](docs/std-size-xex.svg)
-
-| Standard library | Panic strategy | `.text` | `.data` | `.bss` | `.xthunks` | Loaded image | XEX file |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| None (`no_std`) | `immediate-abort` | 695,724 | 140,146 | 68,912 | 3,648 | 909,250 | 356,352 |
-| `std` | `immediate-abort` | 695,716 | 140,146 | 68,928 | 7,248 | 912,858 | 360,448 |
-| `std` for system modules | `immediate-abort` | 695,716 | 140,146 | 68,928 | 7,248 | 912,858 | 360,448 |
-| None (`no_std`) | `abort` | 718,884 | 140,594 | 68,912 | 3,648 | 932,858 | 364,544 |
-| `std` | `abort` | 748,492 | 173,594 | 77,188 | 7,376 | 1,007,470 | 391,168 |
-| `std` for system modules | `abort` | 748,492 | 173,594 | 77,188 | 7,376 | 1,007,470 | 391,168 |
-
-Sizes are in bytes. The loaded image is every section the loader maps, `.rodata` (784 bytes) and `.xvars` (36 bytes) included.
-
-- The two std builds are the same size. `--cfg xbox360_system` changes only thread and socket code, which openxbdm does not call.
-- Linking std adds 3.5 KiB, all of it in `.xthunks`. std links its own copy of `xbox360-sys` (0.1.0) next to the module's (0.2), and each of the 227 imports the module keeps gets an import record from both copies.
-- `-Cpanic=immediate-abort` makes every panic a trap with no message. A panic hook (`std::panic::set_hook`) needs `-Cpanic=abort` instead. That adds 23.1 KiB without std and 95.9 KiB with it.
-
-## Repository layout
-
-| Path | Contents |
-| --- | --- |
-| `crates/xex-link` | The ELF-to-XEX linker (the post-link step). |
-| `crates/xbox360-asm-rewrite` | The register save and restore rewrite, and the reservation check. |
-| `crates/xbox360-sys` | Kernel and XAM imports, exports and console-ABI entry bridges. |
-| `crates/xbox360` | Safe wrappers over `xbox360-sys`. |
-| `crates/xbox360-vmx128` | VMX128 vector operations for the PPC64 toolchain. |
-| `targets/` | The custom rustc target specification. |
-| `toolchain/rust-std-xbox360` | The standard-library overlay. |
-| `sysroot/` | Buck2 rules for the standard library crates. |
-| `buck/`, `platforms/`, `toolchains/` | Buck2 rules, configurations and toolchains. |
-| `third-party/rust` | Buck2 rules for the crates.io dependencies of the host crates and the examples (`reindeer buckify`). |
-| `examples/` | Sample titles (see below). |
-| `tools/` | Helper scripts and the `xbdbg` devkit debugger. |
-| `docs/` | Reference material. |
-
-## Running under Xenia
-
-```
-tools/run-xenia.sh <title>.xex --gpu=null --apu=nop
-```
-
-The script launches a headless Xenia build and writes its log to standard
-output. Xenia does not exit when the title's main thread returns, so runs end at
-the timeout; inspect the log rather than the exit code. Set the Xenia path and
-timeout at the top of the script if required.
-
-## Compiling C and C++
-
-`xex-link` is language-agnostic: any LLVM front end that emits a big-endian
-PowerPC ELF is supported. `xbox360_c_title` in `buck/xex.bzl` compiles C and
-C++ sources with the `toolchains//:clang` toolchain (`-ffreestanding
--fno-builtin`, for `powerpc-unknown-none-eabi`, or `powerpc64-unknown-xbox360`
-with the PPC64 toolchain), links them with its LLD, and converts the result
-with `xex-link`. C++ sources (`.cc`, `.cpp`, `.cxx`) also compile with
-`-fno-exceptions -fno-rtti -fno-threadsafe-statics`, as no C++ runtime exists
-for the console; `cxx_compiler_flags` adds flags for them only. The examples
-demonstrate the full path:
-
-```
-buck2 build //examples/chello:chello //examples/cxxhello:cxxhello --show-output
-```
-
-C and C++ titles do not build the Rust compiler. The PPC32 toolchain runs
-`clang` from the Buck2 daemon's `PATH`; that clang must include the PowerPC
-target (`clang -print-targets`). The PPC64 toolchain builds only LLVM, clang
-and LLD from source, not the Rust compiler. Both use the Rust release that
-Buck2 downloads for the host tool `xex-link`, and the PPC32 toolchain also for
-its LLD. No C library exists for the console, and `_start` runs no static
-constructors. The title declares its imports as thunks in the `.xthunks`
-section, as `examples/chello/hello.c` does.
-
-## Linker options
-
-`xex-link` reads the XEX metadata from a TOML manifest:
-
-```
-usage: xex-link <input.elf> <output.xex> [--manifest PATH] [--resource NAME=PATH]...
-```
-
-`--resource NAME=PATH` embeds a file in the image as the resource `NAME` (1 to 8 bytes, case-sensitive), which the title reads in place with `xbox360::module::resource`. With Buck2, pass `resources = {"NAME": "file or target"}` to `xbox360_title`.
-
-Every key is optional; an absent key, or an absent `--manifest`, takes the
-default shown. Commented keys have no default. Unknown keys are rejected.
+As part of our build integration, xex-link reads a manifest (`xex.toml` in the project's directory) which contains attributes that will make their way into the XEX header:
 
 ```toml
 title_id = 0x00000000       # integer
@@ -448,40 +153,49 @@ min_version = "2.0.1861.0"  # minimum imported module version
 # min_version = "2.0.1861.0" # oldest compatible version in the export table
 ```
 
-The load address must match the image base the ELF was linked at and must be a
-multiple of the page size: 64 KB, or 4 KB with `SMALL_PAGES`.
+The load address must match the image base the ELF was linked at and must be a multiple of the page size: 64 KB, or 4 KB with `SMALL_PAGES`.
 
-## Examples
+xex-link also handles embedding of data in the XEX, but this does not get declared in the `xex.toml` since the build system must be aware of the dependencies. Instead, the `xbox360_title` declares the `resources`:
 
-| Example | Standard library | Description |
-| --- | --- | --- |
-| `hello` | No | Networking and threads; sends a UDP datagram from a worker thread. |
-| `hello2` | No | Minimal title that calls `DbgPrint`. |
-| `blink` | No | Prints a counter with `DbgPrint` about once a second. |
-| `threads` | No | Spawns and joins a worker thread. |
-| `net` | No | Sends a UDP datagram. |
-| `noimp` | No | Title with no imports; writes to a memory heartbeat. |
-| `library-check` | No | Checks each module of the `xbox360` crate. |
-| `resources` | No | Reads two files that the image embeds as resources. |
-| `stdhello` | Yes | Allocation, threads, and files. |
-| `tokweb` | Yes | tokio async runtime with an HTTP request to a host server. |
-| `chello` | No | C title, built with `clang`. |
-| `cxxhello` | No | C++ title, built with `clang`. |
-| `vmx128test` | Yes | PPC64 only. Checks `xbox360-vmx128`, vector code from `core::simd`, the use of v32-v127, and the vector calling convention against code compiled by the console compiler. |
-| `vmx128bench` | Yes | PPC64 only. Instruction latency, throughput, memory bandwidth and compiler auto-vectorization measurements. |
-| `sfmode` | Yes | PPC64 only. MSR[SF], integer condition codes, carry and CTR probes. |
+```starlark
+resources = {
+    "SHADER": ":compiled_shader",
+    "FONT": "font.bin",
+}
+```
 
-Every example builds with Buck2. With Cargo, the Rust titles marked "No" other than `library-check` and `resources` build with step 4, and those marked "Yes" with step 5. `hello2`, `threads`, `net`, `chello` and `cxxhello` declare their own import thunks instead of using `xbox360-sys`. `vmx128test`, `vmx128bench` and `sfmode` build only with Buck2, with `--target-platforms xbox360//platforms:ppc64`; other platforms skip them.
+### LLVM Fork
 
-## Further reading
+Our [LLVM fork](https://github.com/llvm/llvm-project/compare/main...landaire-contrib:llvm-project:xbox360-abi-upstream-complete) adds a `powerpc64-unknown-xbox360` target to LLVM which implements proper PPC64-ILP32 behaviors and adds support for VMX128.
 
-- `ARCHITECTURE.md`: target ABI, the pipeline, imports, threading, and
-  networking.
-- `ROADMAP.md`: milestones and their verification status.
-- `toolchain/rust-std-xbox360/README.md`: the standard-library overlay in
-  detail, including the protected-atomics backend.
-- `docs/llvm-integration.md`: why the ELF-to-XEX conversion is an external
-  post-link step rather than part of LLVM.
-- `docs/xenon-instructions.md`: Xenon instruction and kernel-ABI reference.
-- `docs/vmx128-measurements.md`: console instruction costs, bandwidth and
-  LLVM/SDK compiler comparison, with raw measurements and reproduction commands.
+This fork is not necessary to compile and run code on the console, but is a much more comprehensive and proper implementation of a PowerPC backend targeting the Xenon CPU. It still emits an ELF binary, but all behaviors of the actual LLVM codegen are better.
+
+For example, the official SDK rarely auto-vectorizes code whiel LLVM will happily do so:
+
+| Compiler configuration          | Kernels with generated SIMD, out of 44 |
+| ------------------------------- | -------------------------------------- |
+| SDK C compiler `/O2`            | 0                                      |
+| Clang `-O3 -mno-altivec`        | 0                                      |
+| Clang `-O3 -mno-vmx128`         | 25                                     |
+| Clang `-O3`, VMX128             | 25                                     |
+| Clang `-O3 -ffast-math`, VMX128 | 26                                     |
+| Rust `-O3`, VMX128              | 24                                     |
+
+You can see more details about VMX128 and its performance implications here: [vmx128-measurements.md](/docs/vmx128-measurements.md)
+
+### Rust stdlib
+
+The `stdlib` for Rust works, but does add some bloat to your binary. Below are some measurements I took from my [`openxbdm`](https://github.com/landaire/openxbdm) project which is `no_std` compared against the same library using `std`:
+
+![Loaded image of openxbdm by section](docs/std-size-image.svg)
+
+![XEX file of openxbdm](docs/std-size-xex.svg)
+
+| Standard library         | Panic strategy    | `.text` | `.data` | `.bss` | `.xthunks` | Loaded image | XEX file |
+| ------------------------ | ----------------- | ------: | ------: | -----: | ---------: | -----------: | -------: |
+| None (`no_std`)          | `immediate-abort` | 695,724 | 140,146 | 68,912 |      3,648 |      909,250 |  356,352 |
+| `std`                    | `immediate-abort` | 695,716 | 140,146 | 68,928 |      7,248 |      912,858 |  360,448 |
+| `std` for system modules | `immediate-abort` | 695,716 | 140,146 | 68,928 |      7,248 |      912,858 |  360,448 |
+| None (`no_std`)          | `abort`           | 718,884 | 140,594 | 68,912 |      3,648 |      932,858 |  364,544 |
+| `std`                    | `abort`           | 748,492 | 173,594 | 77,188 |      7,376 |    1,007,470 |  391,168 |
+| `std` for system modules | `abort`           | 748,492 | 173,594 | 77,188 |      7,376 |    1,007,470 |  391,168 |
