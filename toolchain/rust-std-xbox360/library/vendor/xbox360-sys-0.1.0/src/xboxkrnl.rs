@@ -2097,6 +2097,13 @@ crate::import_thunk!(
 );
 
 crate::import_variable!(
+    /// NUL-terminated command line of the running executable.
+    pub ExLoadedCommandLine,
+    lib = XBOXKRNL,
+    ordinal = 0x1AE
+);
+
+crate::import_variable!(
     /// NUL-terminated object path of the running executable.
     pub ExLoadedImageName,
     lib = XBOXKRNL,

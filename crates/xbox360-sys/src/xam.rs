@@ -53,8 +53,8 @@ pub use self::input::InputState;
 pub use self::input::Keystroke;
 pub use self::input::KeystrokeFlags;
 pub use self::input::KeystrokeQuery;
-pub use self::input::PadKey;
 pub use self::input::PacketNumber;
+pub use self::input::PadKey;
 pub use self::input::Vibration;
 pub use self::io::Overlapped;
 pub use self::media::MediaVerificationFailedBlocks;
@@ -659,7 +659,6 @@ crate::import_thunk!(
     lib = XAM,
     ordinal = 0x1C6
 );
-
 
 crate::import_thunk!(
     /// Reads the capabilities of the controller of a user slot.

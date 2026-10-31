@@ -1,3 +1,5 @@
+load("@prelude//rust/buildscript:buildscript_platform.bzl", "transition_alias")
+
 rust_library(
     name = "xbox360_asm_rewrite",
     srcs = glob(["src/**/*.rs"]),
@@ -30,7 +32,7 @@ rust_test(
 )
 
 rust_binary(
-    name = "xbox360-asm-rewrite",
+    name = "xbox360-asm-rewrite-impl",
     srcs = glob(["src/**/*.rs"]),
     crate = "xbox360_asm_rewrite",
     crate_root = "src/main.rs",
@@ -40,5 +42,11 @@ rust_binary(
         "//third-party/rust:clap",
         "//third-party/rust:thiserror",
     ],
+)
+
+transition_alias(
+    name = "xbox360-asm-rewrite",
+    actual = ":xbox360-asm-rewrite-impl",
+    incoming_transition = "//platforms:host-tool-build-transition",
     visibility = ["PUBLIC"],
 )

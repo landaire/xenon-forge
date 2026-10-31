@@ -10,7 +10,10 @@ pub struct ProfileEnumResult {
 
 impl ProfileEnumResult {
     pub const fn new() -> Self {
-        Self { xuid_offline: 0, account: [0; 0x180] }
+        Self {
+            xuid_offline: 0,
+            account: [0; 0x180],
+        }
     }
 }
 
@@ -40,7 +43,11 @@ impl UserData {
     /// A string of `bytes` bytes, NUL included, at `address`. Addresses
     /// are 32-bit.
     pub fn unicode(address: *const u16, bytes: u32) -> Self {
-        Self { data_type: Self::UNICODE, reserved: [0; 7], value: [bytes, address as u32] }
+        Self {
+            data_type: Self::UNICODE,
+            reserved: [0; 7],
+            value: [bytes, address as u32],
+        }
     }
 }
 

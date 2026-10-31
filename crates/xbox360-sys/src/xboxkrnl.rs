@@ -109,6 +109,7 @@ pub use self::loader::DllEntryReason;
 pub use self::loader::ImageFlags;
 pub use self::loader::ImageVersion;
 pub use self::loader::LdrDataTableEntry;
+pub use self::loader::LoadedCommandLine;
 pub use self::loader::LoadedImageName;
 pub use self::memory::AllocationType;
 pub use self::memory::MemoryBasicInformation;
@@ -150,8 +151,8 @@ pub use self::thread::NotificationRegistration;
 pub use self::thread::ProcessType;
 pub use self::thread::ThreadCreationFlags;
 pub use self::thread::TlsIndex;
-pub use self::video::DisplayInformation;
 pub use self::video::DisplayDiscoveryData;
+pub use self::video::DisplayInformation;
 pub use self::video::DisplayModeOverrideParameters;
 pub use self::video::SystemCommandBuffer;
 pub use self::video::VideoModeInfo;
@@ -1648,6 +1649,13 @@ crate::import_thunk!(
     pub MmDbgWriteCheck(address: u32, context: *mut u32) -> u32,
     lib = XBOXKRNL,
     ordinal = 0x1AD
+);
+
+crate::import_variable!(
+    /// Command line of the running executable.
+    pub safe ExLoadedCommandLine: LoadedCommandLine,
+    lib = XBOXKRNL,
+    ordinal = 0x1AE
 );
 
 crate::import_variable!(

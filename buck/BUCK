@@ -19,7 +19,17 @@ export_file(
 )
 
 export_file(
+    name = "write_vscode_workspace.py",
+    visibility = ["PUBLIC"],
+)
+
+export_file(
     name = "run_clang.py",
+    visibility = ["PUBLIC"],
+)
+
+export_file(
+    name = "run_title.py",
     visibility = ["PUBLIC"],
 )
 

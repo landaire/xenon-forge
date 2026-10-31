@@ -6,6 +6,7 @@ xbox360_title(
     crate_root = "src/main.rs",
     edition = "2024",
     link_script = "link.x",
+    rust_project = "Cargo.toml",
     manifest = "xex.toml",
     deps = ["//crates/xbox360-sys:xbox360-sys"],
 )

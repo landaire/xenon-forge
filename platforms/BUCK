@@ -1,4 +1,4 @@
-load("//buck:platforms.bzl", "execution_platforms", "host_execution_platform", "sysroot_build_transition")
+load("//buck:platforms.bzl", "execution_platforms", "host_execution_platform", "host_tool_build_transition", "sysroot_build_transition")
 
 # Host targets use the detected host platform. Xbox targets enter the
 # configuration through the transitions in buck/platforms.bzl.
@@ -160,6 +160,12 @@ platform(
 sysroot_build_transition(
     name = "sysroot-build-transition",
     sysroot_none = ":sysroot-none",
+    visibility = ["PUBLIC"],
+)
+
+host_tool_build_transition(
+    name = "host-tool-build-transition",
+    ppc32 = ":codegen[ppc32]",
     visibility = ["PUBLIC"],
 )
 

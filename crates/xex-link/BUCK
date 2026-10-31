@@ -1,5 +1,7 @@
+load("@prelude//rust/buildscript:buildscript_platform.bzl", "transition_alias")
+
 rust_binary(
-    name = "xex-link",
+    name = "xex-link-impl",
     srcs = glob(["src/**/*.rs"]),
     crate = "xex_link",
     crate_root = "src/main.rs",
@@ -15,5 +17,11 @@ rust_binary(
         "//third-party/rust:xenon_types",
         "//third-party/rust:xex2",
     ],
+)
+
+transition_alias(
+    name = "xex-link",
+    actual = ":xex-link-impl",
+    incoming_transition = "//platforms:host-tool-build-transition",
     visibility = ["PUBLIC"],
 )

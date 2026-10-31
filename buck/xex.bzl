@@ -24,9 +24,13 @@ image.
 Every rule fails the build if the image holds a reservation that the
 kernel loader reports as unprotected.
 
-Every rule's `[elf]` is the image with symbols and debug information, which
-xex-link leaves out of the XEX. `[gdb]` and `[lldb]` are command files that
-load it into a debugger.
+Every rule is runnable: `buck2 run` uploads the XEX through xeedee and
+launches it. `[debug]` uploads it, starts openxbdm-kd, launches the title,
+and opens GDB. `[debug-server]` leaves the GDB server waiting for an
+external debugger, and `[vscode]` emits a ready-to-open VS Code workspace.
+`[elf]` is the image with symbols and debug information, which xex-link
+leaves out of the XEX. `[gdb]` and `[lldb]` are command files that load it
+into a debugger.
 """
 
 load("@prelude//decls:toolchains_common.bzl", "toolchains_common")
@@ -55,10 +59,58 @@ _TOOL_ATTRS = {
         providers = [RunInfo],
         default = "xbox360//crates/xbox360-asm-rewrite:xbox360-asm-rewrite",
     ),
+    "_console_kd_target": attrs.string(default = read_root_config("xbox360", "console_kd_target") or ""),
+    "_console_xbdm": attrs.string(default = read_root_config("xbox360", "console_xbdm") or ""),
+    "_deploy_directory": attrs.string(default = read_root_config("xbox360", "deploy_directory") or ""),
+    "_debug_registers": attrs.string(default = select({
+        "//platforms:xbox-ppc64-ilp32": "ilp32",
+        "DEFAULT": "32",
+    })),
+    "_gdb_listen": attrs.string(default = read_root_config("xbox360", "gdb_listen") or "127.0.0.1:2159"),
+    "_gdb_tool": attrs.string(default = read_root_config("xbox360", "gdb_tool") or "gdb"),
+    "_kd_tool": attrs.string(default = read_root_config("xbox360", "kd_tool") or "openxbdm-kd"),
     "_python_bootstrap_toolchain": toolchains_common.python_bootstrap(),
+    "_run_title": attrs.source(default = "xbox360//buck:run_title.py"),
     "_write_stdout": attrs.source(default = "xbox360//buck:write_stdout.py"),
+    "_write_vscode_workspace": attrs.source(default = "xbox360//buck:write_vscode_workspace.py"),
+    "_xbdm_tool": attrs.string(default = read_root_config("xbox360", "xbdm_tool") or "xeedee"),
     "_xex_link": attrs.exec_dep(providers = [RunInfo], default = "xbox360//crates/xex-link:xex-link"),
 }
+
+def _run_title_command(
+        ctx: AnalysisContext,
+        xex: Artifact,
+        debug_mode: str | None = None,
+        gdb_commands: Artifact | None = None) -> cmd_args:
+    command = cmd_args(
+        ctx.attrs._python_bootstrap_toolchain[PythonBootstrapToolchainInfo].interpreter,
+        ctx.attrs._run_title,
+        "--xbdm-tool",
+        ctx.attrs._xbdm_tool,
+        "--kd-tool",
+        ctx.attrs._kd_tool,
+        "--gdb",
+        ctx.attrs._gdb_tool,
+        "--listen",
+        ctx.attrs._gdb_listen,
+        "--registers",
+        ctx.attrs._debug_registers,
+    )
+    if ctx.attrs._console_xbdm:
+        command.add("--host", ctx.attrs._console_xbdm)
+    if ctx.attrs._deploy_directory:
+        command.add("--directory", ctx.attrs._deploy_directory)
+    if ctx.attrs._console_kd_target:
+        command.add("--kd-target", ctx.attrs._console_kd_target)
+    if debug_mode == "gdb":
+        gdb_commands or fail("GDB debugging requires a command file")
+        command.add("--debug", "--gdb-commands", gdb_commands)
+    elif debug_mode == "server":
+        command.add("--debug-server")
+    elif debug_mode != None:
+        fail("unknown debug mode {}".format(debug_mode))
+    command.add(xex)
+    return command
 
 # Files that a XEX embeds as named resources, which the title finds with
 # `XexGetModuleSection`.
@@ -115,11 +167,20 @@ def _xex_link(ctx: AnalysisContext, image: Artifact, checks: list[Artifact]) -> 
     ctx.actions.run(cmd, category = "xex_link")
     return xex
 
-def _debugger_files(ctx: AnalysisContext, elf: Artifact, library: Dependency | None) -> dict[str, list[Provider]]:
-    """`[gdb]` and `[lldb]`: command files that load `elf` and, with
-    `library` (`xbox360//sysroot:library`), find the standard library
-    source. Paths are relative to the project root, as are the source paths
-    in the debug information, so the debugger runs there."""
+def _debugger_files(
+        ctx: AnalysisContext,
+        xex: Artifact,
+        elf: Artifact,
+        library: Dependency | None,
+        rust_project: Artifact | None) -> dict[str, list[Provider]]:
+    """Debugger artifacts and runnable debugger subtargets.
+
+    The command files load `elf` and, with `library`
+    (`xbox360//sysroot:library`), find the standard library source. Paths are
+    relative to the project root, as are the source paths in the debug
+    information, so the debugger runs there. The VS Code workspace links
+    `rust_project` for Rust Analyzer when one is present.
+    """
     gdb = [cmd_args("file ", elf, delimiter = "")]
     lldb = [cmd_args("target create ", elf, delimiter = "")]
     outputs = [elf]
@@ -135,20 +196,60 @@ def _debugger_files(ctx: AnalysisContext, elf: Artifact, library: Dependency | N
         outputs.append(source)
 
     files = {}
+    gdb_script = None
     for name, lines in [("gdb", gdb), ("lldb", lldb)]:
         script, _ = ctx.actions.write(name + ".commands", cmd_args(lines, "", delimiter = "\n"), allow_args = True)
         files[name] = [DefaultInfo(default_output = script, other_outputs = outputs)]
+        if name == "gdb":
+            gdb_script = script
 
+    files["debug"] = [
+        DefaultInfo(default_output = xex, other_outputs = outputs + [gdb_script]),
+        RunInfo(args = _run_title_command(ctx, xex, "gdb", gdb_script)),
+    ]
+    files["debug-server"] = [
+        DefaultInfo(default_output = xex, other_outputs = outputs),
+        RunInfo(args = _run_title_command(ctx, xex, "server")),
+    ]
+
+    workspace = ctx.actions.declare_output(ctx.label.name + ".code-workspace")
+    workspace_command = cmd_args(
+        ctx.attrs._python_bootstrap_toolchain[PythonBootstrapToolchainInfo].interpreter,
+        ctx.attrs._write_vscode_workspace,
+        "--output",
+        workspace.as_output(),
+        "--target",
+        str(ctx.label.raw_target()),
+        "--elf",
+        elf,
+        "--gdb-commands",
+        gdb_script,
+        "--gdb",
+        ctx.attrs._gdb_tool,
+        "--listen",
+        ctx.attrs._gdb_listen,
+        "--architecture",
+        "powerpc:common64" if ctx.attrs._debug_registers == "64" else "powerpc:common",
+    )
+    if rust_project:
+        workspace_command.add("--rust-project", rust_project)
+    ctx.actions.run(workspace_command, category = "vscode_workspace")
+    files["vscode"] = [
+        DefaultInfo(default_output = workspace, other_outputs = outputs + [gdb_script]),
+    ]
     return files
 
 def _xex_impl(ctx: AnalysisContext) -> list[Provider]:
     elf = ctx.attrs.elf[DefaultInfo].default_outputs[0]
     reservations = _check_reservations(ctx, elf)
     xex = _xex_link(ctx, elf, [reservations])
-    return [DefaultInfo(default_output = xex, sub_targets = {
-        "elf": [DefaultInfo(default_output = elf)],
-        "reservations": [DefaultInfo(default_output = reservations)],
-    } | _debugger_files(ctx, elf, ctx.attrs._sysroot_library))]
+    return [
+        DefaultInfo(default_output = xex, sub_targets = {
+            "elf": [DefaultInfo(default_output = elf)],
+            "reservations": [DefaultInfo(default_output = reservations)],
+        } | _debugger_files(ctx, xex, elf, ctx.attrs._sysroot_library, ctx.attrs.rust_project)),
+        RunInfo(args = _run_title_command(ctx, xex)),
+    ]
 
 _XEX_ATTRS = {
     # See xex-link's documentation for the format; without one, xex-link's
@@ -158,6 +259,8 @@ _XEX_ATTRS = {
     # An `xex_resources` target: the files that the image embeds by
     # resource name.
     "resources": attrs.option(attrs.dep(providers = [XexResourcesInfo]), default = None),
+    # Cargo project loaded by rust-analyzer in the generated VS Code workspace.
+    "rust_project": attrs.option(attrs.source(), default = None),
 } | _TOOL_ATTRS
 
 # The standard library source, for the debugger command files of Rust
@@ -225,10 +328,13 @@ def _xbox360_c_title_impl(ctx: AnalysisContext) -> list[Provider]:
 
     reservations = _check_reservations(ctx, image)
     xex = _xex_link(ctx, image, [reservations])
-    return [DefaultInfo(default_output = xex, sub_targets = {
-        "elf": [DefaultInfo(default_output = image)],
-        "reservations": [DefaultInfo(default_output = reservations)],
-    } | _debugger_files(ctx, image, None))]
+    return [
+        DefaultInfo(default_output = xex, sub_targets = {
+            "elf": [DefaultInfo(default_output = image)],
+            "reservations": [DefaultInfo(default_output = reservations)],
+        } | _debugger_files(ctx, xex, image, None, ctx.attrs.rust_project)),
+        RunInfo(args = _run_title_command(ctx, xex)),
+    ]
 
 # A XEX from C and C++ sources. The configured clang compiles them for
 # big-endian PowerPC without a C or C++ library, and its linker links the
@@ -570,8 +676,11 @@ def _xex_from_assembly_impl(ctx: AnalysisContext) -> list[Provider]:
     sub_targets["asm"] = [DefaultInfo(default_output = assembly)]
     sub_targets["elf"] = [DefaultInfo(default_output = image)]
     sub_targets["reservations"] = [DefaultInfo(default_output = reservations)]
-    sub_targets |= _debugger_files(ctx, image, ctx.attrs._sysroot_library)
-    return [DefaultInfo(default_output = xex, sub_targets = sub_targets)]
+    sub_targets |= _debugger_files(ctx, xex, image, ctx.attrs._sysroot_library, ctx.attrs.rust_project)
+    return [
+        DefaultInfo(default_output = xex, sub_targets = sub_targets),
+        RunInfo(args = _run_title_command(ctx, xex)),
+    ]
 
 # A XEX assembled and linked from the assembly of an `xbox360_executable_*`
 # target. The rule configures itself for the console; the executable keeps
@@ -607,6 +716,7 @@ def xbox360_title(
         link_script: str,
         manifest: str | None = None,
         resources: dict[str, str] | str | None = None,
+        rust_project: str | None = None,
         std: bool | str = False,
         rewrite: bool = False,
         rustc_flags: list[str] = [],
@@ -617,12 +727,14 @@ def xbox360_title(
     `link_script` is the GNU ld script that places the sections; `manifest`
     is the xex-link manifest with the title's XEX metadata. `resources`
     maps resource names (1 to 8 bytes) to the files, or targets, that the
-    image embeds under them, or names an `xex_resources` target. `std = True`
-    selects the standard library; otherwise the crate is `no_std` and may
-    use core and alloc. `std = "system"` selects the standard library of
-    system modules: its threads start in the system process, which keeps
-    them when the title exits, and its sockets open as the system rather
-    than as the title. Other arguments are those of `rust_binary`.
+    image embeds under them, or names an `xex_resources` target.
+    `rust_project` names the Cargo manifest used by the `[vscode]` subtarget
+    for Rust Analyzer. `std = True` selects the standard library; otherwise
+    the crate is `no_std` and may use core and alloc. `std = "system"`
+    selects the standard library of system modules: its threads start in the
+    system process, which keeps them when the title exits, and its sockets
+    open as the system rather than as the title. Other arguments are those
+    of `rust_binary`.
 
     With `rewrite`, the executable is an `xbox360_executable_*` target,
     which takes the `srcs`, `crate_root`, `edition`, `deps`, `features` and
@@ -659,6 +771,7 @@ def xbox360_title(
             executable = ":{}-executable".format(name),
             manifest = manifest,
             resources = resources,
+            rust_project = rust_project,
             target_compatible_with = compatible_with,
             visibility = visibility,
         )
@@ -685,6 +798,7 @@ def xbox360_title(
         name = name,
         elf = ":{}-elf".format(name),
         manifest = manifest,
+        rust_project = rust_project,
         resources = resources,
         target_compatible_with = compatible_with,
         visibility = visibility,

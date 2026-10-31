@@ -1,6 +1,7 @@
-//! Comprehensive std smoke test for the Xbox 360: allocator + println, real
-//! threads sharing an Arc<Mutex>, and std::fs (create/write, open/read). STAGE
-//! reaches 0x55 when all pass. Read STAGE once with `xeedee getmem <addr> 4`.
+//! Comprehensive std smoke test for the Xbox 360: allocator + println,
+//! command-line arguments, real threads sharing an Arc<Mutex>, and std::fs
+//! (create/write, open/read). STAGE reaches 0x55 when all pass. ARGS_STAGE
+//! reaches 0xA6 when launched with `alpha "two words"`.
 #![no_main]
 
 use std::fs::File;
@@ -12,6 +13,8 @@ use std::thread;
 
 #[unsafe(no_mangle)]
 pub static mut STAGE: u32 = 0;
+#[unsafe(no_mangle)]
+pub static mut ARGS_STAGE: u32 = 0;
 
 core::arch::global_asm!(
     ".globl _start",
@@ -23,6 +26,9 @@ core::arch::global_asm!(
 
 fn set_stage(stage: u32) {
     unsafe { core::ptr::write_volatile(&raw mut STAGE, stage) };
+}
+fn set_args_stage(stage: u32) {
+    unsafe { core::ptr::write_volatile(&raw mut ARGS_STAGE, stage) };
 }
 
 fn fs_test() -> std::io::Result<bool> {
@@ -63,6 +69,20 @@ fn threads_test() -> bool {
 #[unsafe(no_mangle)]
 extern "C" fn real_main() {
     set_stage(0x01);
+    let arguments: Vec<_> = std::env::args_os().collect();
+    println!("stdhello: arguments = {arguments:?}");
+    let arguments_ok = arguments
+        .first()
+        .is_some_and(|argument| argument.as_encoded_bytes().ends_with(b"stdhello.xex"))
+        && arguments.get(1).is_some_and(|argument| argument == "alpha")
+        && arguments
+            .get(2)
+            .is_some_and(|argument| argument == "two words");
+    set_args_stage(if arguments_ok {
+        0xA6
+    } else {
+        0xA0 | arguments.len() as u32
+    });
 
     let squares: Vec<u32> = (1..=8).map(|value| value * value).collect();
     set_stage(0x02);

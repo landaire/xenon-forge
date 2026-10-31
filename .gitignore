@@ -7,6 +7,7 @@ stdout
 /.rustsrc-backup/
 *.o
 /buck-out
+/.buckconfig.local
 # A local buck2-rustc-bootstrap checkout for `rustc_bootstrap = disabled`
 # (README).
 /toolchain/buck2-rustc-bootstrap/

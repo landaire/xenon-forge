@@ -62,7 +62,12 @@ pub struct SystemCommandBuffer {
 
 impl SystemCommandBuffer {
     pub const fn new() -> Self {
-        Self { address: 0, dwords: 0, state: 0, _reserved_00c: [0; 0x22] }
+        Self {
+            address: 0,
+            dwords: 0,
+            state: 0,
+            _reserved_00c: [0; 0x22],
+        }
     }
 }
 
@@ -107,7 +112,12 @@ impl DisplayModeOverrideParameters {
     pub const SIZE: u32 = 0x10;
 
     pub const fn new(attempt: u8) -> Self {
-        Self { size: Self::SIZE, _reserved_004: [0; 2], attempt, _reserved_00d: [0; 3] }
+        Self {
+            size: Self::SIZE,
+            _reserved_004: [0; 2],
+            attempt,
+            _reserved_00d: [0; 3],
+        }
     }
 }
 
@@ -137,6 +147,11 @@ impl DisplayDiscoveryData {
 
     /// Big-endian u32 at `offset`.
     pub const fn word(&self, offset: usize) -> u32 {
-        u32::from_be_bytes([self.bytes[offset], self.bytes[offset + 1], self.bytes[offset + 2], self.bytes[offset + 3]])
+        u32::from_be_bytes([
+            self.bytes[offset],
+            self.bytes[offset + 1],
+            self.bytes[offset + 2],
+            self.bytes[offset + 3],
+        ])
     }
 }

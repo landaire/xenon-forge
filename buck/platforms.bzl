@@ -136,3 +136,30 @@ sysroot_build_transition = rule(
     },
     is_configuration_rule = True,
 )
+
+def _host_tool_build_transition_impl(ctx: AnalysisContext) -> list[Provider]:
+    ppc32 = ctx.attrs.ppc32[ConstraintValueInfo]
+
+    def impl(platform: PlatformInfo) -> PlatformInfo:
+        constraints = dict(platform.configuration.constraints)
+        constraints[ppc32.setting.label] = ppc32
+        return PlatformInfo(
+            label = "host-tool",
+            configuration = ConfigurationInfo(
+                constraints = constraints,
+                values = platform.configuration.values,
+            ),
+        )
+
+    return [DefaultInfo(), TransitionInfo(impl = impl)]
+
+# Standalone host tools exchange files with the target compiler and do not
+# consume its Rust metadata. Build them with the release compiler even when
+# the title selects the source-built PPC64 compiler.
+host_tool_build_transition = rule(
+    impl = _host_tool_build_transition_impl,
+    attrs = {
+        "ppc32": attrs.dep(providers = [ConstraintValueInfo]),
+    },
+    is_configuration_rule = True,
+)

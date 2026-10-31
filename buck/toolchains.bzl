@@ -75,11 +75,11 @@ def xbox360_toolchains(
     apply to the standard library crates. `rustdoc_flags` apply to every
     rustdoc run.
 
-    The `xbox360//platforms:codegen` constraint selects the compiler. With
-    its default, `ppc32`, the Rust release and its LLVM tools build every
+    The `xbox360//platforms:codegen` constraint selects the target compiler.
+    With its default, `ppc32`, the Rust release and its LLVM tools build every
     crate. With `ppc64-ilp32`, the rustc and LLVM that the rustc_bootstrap
-    cell builds from source build both the console crates and the host crates
-    (proc macros, build scripts and tools) in the same configuration.
+    cell builds from source build the console crates and their proc macros and
+    build scripts. Standalone host tools transition back to the Rust release.
     """
 
     # PPC32: the Rust release.

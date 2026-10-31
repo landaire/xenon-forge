@@ -112,23 +112,41 @@ impl LoadedImageName {
     /// Copy the path into `buffer` up to its NUL or the end of `buffer`,
     /// and return the number of bytes copied.
     pub fn copy_to(&self, buffer: &mut [u8]) -> usize {
-        let start = core::ptr::from_ref(self).expose_provenance();
-        for (index, slot) in buffer.iter_mut().enumerate() {
-            // SAFETY: a `LoadedImageName` exists only as the kernel export,
-            // a NUL-terminated string, and the bytes up to the NUL are
-            // mapped. Atomic loads allow the kernel to rewrite it.
-            let byte = unsafe {
-                AtomicU8::from_ptr(core::ptr::with_exposed_provenance_mut(start + index))
-            }
-            .load(Ordering::Relaxed);
+        copy_kernel_string(core::ptr::from_ref(self).expose_provenance(), buffer)
+    }
+}
 
-            if byte == 0 {
-                return index;
-            }
+/// `ExLoadedCommandLine`: the NUL-terminated command line of the running
+/// executable. The kernel rewrites it when it starts a title.
+#[repr(C)]
+pub struct LoadedCommandLine {
+    _opaque: [u8; 0],
+    _pinned: core::marker::PhantomPinned,
+}
 
-            *slot = byte;
+impl LoadedCommandLine {
+    /// Copy the command line into `buffer` up to its NUL or the end of
+    /// `buffer`, and return the number of bytes copied.
+    pub fn copy_to(&self, buffer: &mut [u8]) -> usize {
+        copy_kernel_string(core::ptr::from_ref(self).expose_provenance(), buffer)
+    }
+}
+
+fn copy_kernel_string(start: usize, buffer: &mut [u8]) -> usize {
+    for (index, slot) in buffer.iter_mut().enumerate() {
+        // SAFETY: each caller passes the address of a kernel-exported
+        // NUL-terminated string, whose bytes up to the NUL are mapped.
+        // Atomic loads allow the kernel to rewrite it.
+        let byte =
+            unsafe { AtomicU8::from_ptr(core::ptr::with_exposed_provenance_mut(start + index)) }
+                .load(Ordering::Relaxed);
+
+        if byte == 0 {
+            return index;
         }
 
-        buffer.len()
+        *slot = byte;
     }
+
+    buffer.len()
 }
