@@ -22,15 +22,15 @@ This repo is intended to be consumed by other `buck2` projects as an external ce
 As outlined [below](#components), there are quite a few components to this toolchain. The good news is: you don't have to worry about installing any of it! The build system will handle pulling _most_ dependencies on its own.
 
 > [!NOTE]  
-> **For Windows users**:this has only been tested on Windows 11 which is known to provide `tar.exe`. Older versions of Windows certainly do not, so some of these commands may not work. It is recommended that you read the [bootstrap script](/bootstrap.ps1) and fix it up to resolve `dotslash` if it doesn't work on its own. Once you resolve `dotslash` everything else should "just work".
+> **For Windows users**: this has only been tested on Windows 11 which is known to provide `tar.exe`. Older versions of Windows certainly do not, so some of these commands may not work. It is recommended that you read the [bootstrap script](/bootstrap.ps1) and fix it up to resolve `dotslash` if it doesn't work on its own. Once you resolve `dotslash` everything else should "just work".
 
 In general, you need to use `buck2` for building. I recommend just using `bin/buck2` / `bin/buck2.cmd` as this will download the `20216-10-15` version which the project has been tested against (newer versions might have some breakage).
 
-## Nix
+### Nix
 
 If you are a `nix` user, you can use `nix develop` to set up all requirements automatically. If you use `devenv`, run `devenv allow`. Otherwise, see below.
 
-## Non-Nix
+### Non-Nix
 
 You will need, somewhere in your `$PATH` on Unix:
 
@@ -120,6 +120,14 @@ bin/buck2 build //games:launcher[vscode] --show-output
 - [rust-std-xbox360](/toolchain/rust-std-xbox360) enlightens the Rust stdlib to be Xenon-aware
 - [/crates/xbox360*](/crates) provides Xbox 360 SDK support to Rust. Currently at this time includes GPU, video, XAM, and direct system `extern` APIs for invoking threads, networking, etc. without `stdlib`.
 - [LLVM fork](https://github.com/llvm/llvm-project/compare/main...landaire-contrib:llvm-project:xbox360-abi-upstream-complete) (see below)[#llvm-fork].
+
+External tools (hash-pinned downloads) include:
+
+- [dotslash](https://github.com/meta/dotslash): handles downloading of hash-pinned tools from GitHub releases
+- [buck2](https://github.com/facebook/buck2): our build system.
+- [openxbdm](https://github.com/landaire/openxbdm) (xeedee/openxbdm-kd etc.): for communicating with the console on deployments.
+- LLVM fork IF `ppc64` is targeted
+- [Various Rust crates](/third-party/rust/BUCK) for 1P crates / other tooling
 
 ### xex-link
 
