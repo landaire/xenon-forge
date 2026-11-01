@@ -296,32 +296,98 @@ xex_std_system = rule(impl = _xex_impl, attrs = _XEX_ATTRS | _SYSROOT_LIBRARY_AT
 _CXX_EXTENSIONS = (".cc", ".cpp", ".cxx")
 _CXX_FLAGS = ["-fno-exceptions", "-fno-rtti", "-fno-threadsafe-statics"]
 
-def _xbox360_c_title_impl(ctx: AnalysisContext) -> list[Provider]:
+# The headers and objects of an `xbox360_c_library` and its dependencies.
+Xbox360CLibraryInfo = provider(fields = {
+    # Directories that sources include headers from.
+    "includes": provider_field(list[Artifact]),
+    "objects": provider_field(list[Artifact]),
+})
+
+def _c_dependencies(deps: list[Dependency]) -> (list[Artifact], list[Artifact]):
+    """The include directories and objects of `deps`, each once."""
+    includes = []
     objects = []
-    for src in ctx.attrs.srcs:
-        is_cxx = any([src.short_path.endswith(ext) for ext in _CXX_EXTENSIONS])
-        obj = ctx.actions.declare_output("objects", src.short_path + ".o")
-        ctx.actions.run(
-            cmd_args(
-                ctx.attrs._clang[RunInfo],
-                "--target=" + ctx.attrs._clang[Xbox360ClangInfo].target_triple,
-                # No C library exists for the console.
-                "-ffreestanding",
-                "-fno-builtin",
-                # Debug information stays in the ELF that a debugger loads.
-                "-g",
-                _CXX_FLAGS if is_cxx else [],
-                ctx.attrs.compiler_flags,
-                ctx.attrs.cxx_compiler_flags if is_cxx else [],
-                "-c",
-                src,
-                "-o",
-                obj.as_output(),
-            ),
-            category = "cc",
-            identifier = src.short_path,
-        )
-        objects.append(obj)
+    for dep in deps:
+        library = dep[Xbox360CLibraryInfo]
+        includes.extend([include for include in library.includes if include not in includes])
+        objects.extend([obj for obj in library.objects if obj not in objects])
+    return includes, objects
+
+def _compile(ctx: AnalysisContext, src: Artifact, includes: list[Artifact], private_headers: list[Artifact] = []) -> Artifact:
+    """Compiles a C, C++ or assembly source of a title or library."""
+    is_cxx = any([src.short_path.endswith(ext) for ext in _CXX_EXTENSIONS])
+    obj = ctx.actions.declare_output("objects", src.short_path + ".o")
+    ctx.actions.run(
+        cmd_args(
+            ctx.attrs._clang[RunInfo],
+            "--target=" + ctx.attrs._clang[Xbox360ClangInfo].target_triple,
+            # No C library exists for the console. C++ compiles as hosted,
+            # where `main` is not mangled, so the C runtime can call it.
+            [] if is_cxx else "-ffreestanding",
+            "-fno-builtin",
+            # Debug information stays in the ELF that a debugger loads.
+            "-g",
+            [cmd_args(include, format = "-I{}") for include in includes],
+            _CXX_FLAGS if is_cxx else [],
+            ctx.attrs.compiler_flags,
+            ctx.attrs.cxx_compiler_flags if is_cxx else [],
+            "-c",
+            src,
+            "-o",
+            obj.as_output(),
+            # Included from the directory of `src`.
+            hidden = private_headers,
+        ),
+        category = "cc",
+        identifier = src.short_path,
+    )
+    return obj
+
+def _xbox360_c_library_impl(ctx: AnalysisContext) -> list[Provider]:
+    includes, dependency_objects = _c_dependencies(ctx.attrs.deps)
+    if ctx.attrs.headers:
+        headers = {}
+        for header in ctx.attrs.headers:
+            path = header.short_path
+            if not path.startswith(ctx.attrs.header_root + "/"):
+                fail("header {} is not under {}".format(path, ctx.attrs.header_root))
+            headers[path.removeprefix(ctx.attrs.header_root + "/")] = header
+        includes = [ctx.actions.symlinked_dir("include", headers)] + includes
+    objects = [_compile(ctx, src, includes, ctx.attrs.private_headers) for src in ctx.attrs.srcs]
+    return [
+        DefaultInfo(default_outputs = includes + objects),
+        Xbox360CLibraryInfo(includes = includes, objects = objects + dependency_objects),
+    ]
+
+_C_ATTRS = {
+    "compiler_flags": attrs.list(attrs.string(), default = []),
+    "cxx_compiler_flags": attrs.list(attrs.string(), default = []),
+    "srcs": attrs.list(attrs.source(), default = []),
+    "_clang": attrs.toolchain_dep(
+        providers = [RunInfo, Xbox360ClangInfo],
+        default = "toolchains//:clang",
+    ),
+}
+
+# Headers and C, C++ or assembly sources for C and C++ titles. `headers`
+# are included relative to `header_root`, a directory of the package.
+# `private_headers` are only for `srcs`, which include them from their own
+# directory. `deps` are other libraries, whose headers `srcs` include. The
+# objects of `srcs` and `deps` link into each title that depends on the
+# library; with --gc-sections, only the sections the title reaches stay.
+xbox360_c_library = rule(
+    impl = _xbox360_c_library_impl,
+    attrs = _C_ATTRS | {
+        "deps": attrs.list(attrs.dep(providers = [Xbox360CLibraryInfo]), default = []),
+        "header_root": attrs.string(default = ""),
+        "headers": attrs.list(attrs.source(), default = []),
+        "private_headers": attrs.list(attrs.source(), default = []),
+    },
+)
+
+def _xbox360_c_title_impl(ctx: AnalysisContext) -> list[Provider]:
+    includes, library_objects = _c_dependencies(ctx.attrs.deps)
+    objects = [_compile(ctx, src, includes) for src in ctx.attrs.srcs] + library_objects
 
     image = ctx.actions.declare_output("image")
     ctx.actions.run(
@@ -330,6 +396,11 @@ def _xbox360_c_title_impl(ctx: AnalysisContext) -> list[Provider]:
             "-flavor",
             "gnu",
             objects,
+            "--gc-sections",
+            # No dynamic loader protects a RELRO segment; without it
+            # .init_array shares the data segment.
+            "-z",
+            "norelro",
             cmd_args(ctx.attrs.link_script, format = "-T{}"),
             "--no-rosegment",
             "-o",
@@ -350,19 +421,19 @@ def _xbox360_c_title_impl(ctx: AnalysisContext) -> list[Provider]:
 
 # A XEX from C and C++ sources. The configured clang compiles them for
 # big-endian PowerPC without a C or C++ library, and its linker links the
-# objects with the GNU ld script `link_script`. `compiler_flags` apply to every
-# source, `cxx_compiler_flags` only to C++ sources (.cc, .cpp, .cxx).
+# objects with --gc-sections and the GNU ld script `link_script`.
+# `compiler_flags` apply
+# to every source, `cxx_compiler_flags` only to C++ sources (.cc, .cpp,
+# .cxx). `deps` are
+# `xbox360_c_library` targets: a title lists `xbox360//src/sdk:crt`, which
+# defines `_start` and calls `main`, and brings the Xbox 360 headers and
+# import thunks; a DLL lists `xbox360//src/sdk:crt-dll`, which calls
+# `DllMain`.
 xbox360_c_title = rule(
     impl = _xbox360_c_title_impl,
-    attrs = _XEX_ATTRS | {
-        "compiler_flags": attrs.list(attrs.string(), default = []),
-        "cxx_compiler_flags": attrs.list(attrs.string(), default = []),
+    attrs = _XEX_ATTRS | _C_ATTRS | {
+        "deps": attrs.list(attrs.dep(providers = [Xbox360CLibraryInfo]), default = []),
         "link_script": attrs.source(),
-        "srcs": attrs.list(attrs.source()),
-        "_clang": attrs.toolchain_dep(
-            providers = [RunInfo, Xbox360ClangInfo],
-            default = "toolchains//:clang",
-        ),
     },
 )
 

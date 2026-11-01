@@ -118,7 +118,8 @@ bin/buck2 build //games:launcher[vscode] --show-output
 - [`xex-link`](/src/crates/xex-link) converts an ELF to XEX
 - [`xbox360-asm-rewrite`](/src/crates/xbox360-asm-rewrite) contains multiple features, but is mostly used for rewriting some suboptimal assembly patterns LLVM emits (such as using common functions for saving/restoring GPRs)
 - [rust-std-xbox360](/toolchain/rust-std-xbox360) enlightens the Rust stdlib to be Xenon-aware
-- [/crates/xbox360*](/src/crates) provides Xbox 360 SDK support to Rust. Currently at this time includes GPU, video, XAM, and direct system `extern` APIs for invoking threads, networking, etc. without `stdlib`.
+- [/src/crates/xbox360*](/src/crates) provides Xbox 360 SDK support to Rust. Currently at this time includes GPU, video, XAM, and direct system `extern` APIs for invoking threads, networking, etc. without `stdlib`.
+- [/src/sdk](/src/sdk) is the C SDK: headers for the kernel and XAM imports, the thunk library that C, C++ and Rust link to call them, and a small C runtime. A C or C++ title adds `//src/sdk:crt` to its `deps`, includes `<xbox360/xboxkrnl.h>` and defines `int main(int argc, char **argv)`. A DLL or system module adds `//src/sdk:crt-dll` and defines `BOOL DllMain(HANDLE, DWORD, PVOID)`. The Rust bindings are generated from the same headers.
 - [LLVM fork](https://github.com/llvm/llvm-project/compare/main...landaire-contrib:llvm-project:xbox360-abi-upstream-complete) (see below)[#llvm-fork].
 
 External tools (hash-pinned downloads) include:

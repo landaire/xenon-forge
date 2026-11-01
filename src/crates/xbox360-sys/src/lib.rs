@@ -7,9 +7,10 @@
 //! truth for the imports. Each import is declared with
 //! `XBOX360_IMPORT(library, ordinal)`. `src/tools/xbox360-bindgen` runs
 //! bindgen on the headers to make [`ffi`], and reads the annotations to make
-//! the thunk library in `src/sdk/thunks`, which this crate assembles. For
-//! each function import, the library has a function under the import's own
-//! name, so C and Rust call it as a plain `extern "C"` function. For each data import, it has the slot `__imp_<name>`.
+//! the thunk library in `src/sdk/thunks`, which this crate assembles and C
+//! titles link. For each function import, the library has a function under
+//! the import's own name, so C and Rust call it as a plain `extern "C"`
+//! function. For each data import, it has the slot `__imp_<name>`.
 //!
 //! Each import is a 16-byte thunk in its own `.xthunks.*` section. The first
 //! big-endian DWORD is the import record `(type<<24 | lib<<16 | ordinal)`.

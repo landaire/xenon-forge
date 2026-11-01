@@ -93,10 +93,10 @@ The crate needs [xex-link](https://github.com/landaire/rust-xbox360) to turn the
 
 ## The SDK and the thunk library
 
-The headers in `src/sdk/include/xbox360` are the source of truth. `src/tools/xbox360-bindgen` generates from the headers:
+The headers in `src/sdk/include/xbox360` are the source of truth. C and C++ titles list `//src/sdk:xbox360` in `deps` and include `<xbox360/xboxkrnl.h>` and `<xbox360/xam.h>`. `src/tools/xbox360-bindgen` generates from the headers:
 
 - `src/ffi.rs` of this crate, through bindgen.
-- The thunk library `src/sdk/thunks/ppc32.S` and `ppc64.S`: one invocation per import of the macros in `src/sdk/thunks/macros.inc`, which define a function under each function import's own name and a slot `__imp_<name>` for each data import. This crate assembles it.
+- The thunk library `src/sdk/thunks/ppc32.S` and `ppc64.S`: one invocation per import of the macros in `src/sdk/thunks/macros.inc`, which define a function under each function import's own name and a slot `__imp_<name>` for each data import. This crate assembles it, and C titles link it.
 
 The crate reads the thunk library from `src/sdk`, so it builds only inside this repository.
 

@@ -1,5 +1,45 @@
-# The thunk library that tools/xbox360-bindgen generates from the Xbox 360
-# headers in include/, and that xbox360-sys assembles.
+load("//buck:xex.bzl", "xbox360_c_library")
+
+# The Xbox 360 headers and the import thunks that tools/xbox360-bindgen
+# generates from them. C and C++ modules list it in `deps`, include
+# <xbox360/xboxkrnl.h> and <xbox360/xam.h>, and call the imports.
+xbox360_c_library(
+    name = "xbox360",
+    header_root = "include",
+    headers = glob(["include/**/*.h"]),
+    # The thunks include it with the C preprocessor.
+    private_headers = ["thunks/macros.inc"],
+    srcs = select({
+        "//platforms:codegen[ppc64-ilp32]": ["thunks/ppc64.S"],
+        "DEFAULT": ["thunks/ppc32.S"],
+    }),
+    visibility = ["PUBLIC"],
+)
+
+# The entry of a C or C++ title: `_start` calls
+# `int main(int argc, char **argv)` with the arguments of the command line.
+xbox360_c_library(
+    name = "crt",
+    srcs = [
+        "crt/main.c",
+        "crt/title.S",
+    ],
+    private_headers = ["crt/entry.inc"],
+    deps = [":xbox360"],
+    visibility = ["PUBLIC"],
+)
+
+# The entry of a C or C++ DLL or system module: `_start` calls
+# `BOOL DllMain(HANDLE Module, DWORD Reason, PVOID Reserved)`.
+xbox360_c_library(
+    name = "crt-dll",
+    srcs = ["crt/dll.S"],
+    private_headers = ["crt/entry.inc"],
+    deps = [":xbox360"],
+    visibility = ["PUBLIC"],
+)
+
+# The thunk library that xbox360-sys assembles.
 filegroup(
     name = "thunks",
     srcs = {

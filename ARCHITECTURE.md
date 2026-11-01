@@ -103,6 +103,27 @@ Key ordinals (verified in Xenia export tables):
   recv 0x12, recvfrom 0x14, send 0x16, sendto 0x18, inet_addr 0x1A,
   XNetStartup 0x33, XNetCleanup 0x34, XNetRandom 0x35.
 
+The SDK in `src/sdk` is the source of truth for the imports. Each declaration
+in `src/sdk/include/xbox360` names its library and ordinal with
+`XBOX360_IMPORT(library, ordinal)`. `src/tools/xbox360-bindgen` runs bindgen
+on the headers for the Rust declarations (`xbox360_sys::ffi`) and writes the
+thunk library `src/sdk/thunks/ppc32.S` and `ppc64.S` from the annotations:
+one invocation per import of the hand-written macros in
+`src/sdk/thunks/macros.inc`, a function under the import's name for each
+function import and a slot `__imp_<name>` for each data import. On the
+ppc64-ilp32 code generation the function is the thunk; on ppc32 it is a stub
+that adds the home area and moves SysV arguments to the console's locations.
+Rust code gets the library through `xbox360-sys`. C and C++ modules list
+`//src/sdk:xbox360` in `deps`, which puts the headers on the include path and
+links the library; `--gc-sections` drops the imports a title does not call.
+
+The SDK's C runtime gives C and C++ modules their entry. `//src/sdk:crt`
+defines `_start` for titles: it saves r14-r31 in full 64 bits, as the loader
+expects, runs the static constructors of `.init_array`, splits
+`ExLoadedCommandLine` with the Microsoft argument rules and calls
+`main(argc, argv)`. `//src/sdk:crt-dll` defines `_start` for DLLs and system
+modules, which calls `DllMain(Module, Reason, Reserved)`.
+
 ## Threading model
 
 `ExCreateThread(handle_out, stack_size, tid_out, xapi_startup, start, ctx,
