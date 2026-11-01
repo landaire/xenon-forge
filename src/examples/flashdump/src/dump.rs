@@ -149,14 +149,16 @@ pub fn run(report: &mut Report) -> Result<(), DumpError> {
     Ok(())
 }
 
-/// The block to start at, from `START_PATH`. Without the file the dump starts at block 0. A
-/// dump that stopped can be continued from a later block and joined on the host.
+/// The block to start at, from `START_PATH`, which is then removed so that the next dump starts
+/// at block 0. Without the file the dump starts at block 0. A dump that stopped can be continued
+/// from a later block and joined on the host.
 fn read_start_block(block_count: u32) -> Result<u32, DumpError> {
     let text = match std::fs::read_to_string(START_PATH) {
         Ok(text) => text,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(0),
         Err(source) => return Err(DumpError::Output { path: START_PATH, source }),
     };
+    std::fs::remove_file(START_PATH).map_err(|source| DumpError::Output { path: START_PATH, source })?;
 
     match text.trim().parse::<u32>() {
         Ok(block) if block < block_count => Ok(block),
