@@ -3,8 +3,8 @@
 DEFAULT_PPC64_TOOLCHAIN = "prebuilt"
 
 NIGHTLY_TOOLCHAIN = {
-    "sha256": "f2a2766c05c24d62bb6b4ec27c0e4fa73c4df915e24919ab5430d2410b56ef51",
-    "source_commit": "c936579923a06ce3b2338cf205b4f40308c8e23c",
+    "sha256": "91e01240fbd0f701efea46959e629a88fb299ea6adc935f293fb33ede2b6dd58",
+    "source_commit": "4fbeecd9784bb811a4efd1bd3ae3d7d8d9a530f5",
     "strip_prefix": "xbox360-toolchain-x86_64-unknown-linux-gnu",
-    "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-238164b881ec/xbox360-toolchain-x86_64-unknown-linux-gnu.tar.xz",
+    "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-8ac3b4bc24e5/xbox360-toolchain-x86_64-unknown-linux-gnu.tar.xz",
 }
