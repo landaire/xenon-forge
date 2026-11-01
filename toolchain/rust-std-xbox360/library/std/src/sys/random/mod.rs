@@ -103,11 +103,14 @@ cfg_select! {
         mod zkvm;
         pub use zkvm::fill_bytes;
     }
+    target_os = "xbox360" => {
+        mod xbox360;
+        pub use xbox360::fill_bytes;
+    }
     any(
         all(target_family = "wasm", target_os = "unknown"),
         target_os = "xous",
         target_os = "vexos",
-        target_os = "xbox360",
     ) => {
         // FIXME: finally remove std support for wasm32-unknown-unknown
         // FIXME: add random data generation to xous
@@ -124,7 +127,6 @@ cfg_select! {
     all(target_os = "wasi", not(target_env = "p1")),
     target_os = "xous",
     target_os = "vexos",
-    target_os = "xbox360",
 )))]
 pub fn hashmap_random_keys() -> (u64, u64) {
     let mut buf = [0; 16];
