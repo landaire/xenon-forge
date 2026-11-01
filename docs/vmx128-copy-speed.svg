@@ -1,13 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 325" width="900" height="325" role="img" aria-label="Scalar, classic AltiVec, and VMX128 vector copy throughput comparison">
   <style>
-    text { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; fill: currentColor; }
+    svg { --fg: #24292f; --muted: #57606a; --border: #d0d7de; --c1: #e15759; --c2: #4e79a7; --c3: #59a14f; }
+    text { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; fill: var(--fg); }
     .title { font-size: 18px; font-weight: 600; }
-    .muted { opacity: 0.68; }
-    .scalar { fill: currentColor; opacity: 0.16; }
-    .classic { fill: currentColor; opacity: 0.38; }
-    .vmx { fill: currentColor; opacity: 0.72; }
-    .axis { stroke: currentColor; stroke-width: 1; opacity: 0.35; }
-    @media (prefers-color-scheme: dark) { svg { filter: invert(1); } }
+    .muted { fill: var(--muted); }
+    .scalar { fill: var(--c1); }
+    .classic { fill: var(--c2); }
+    .vmx { fill: var(--c3); }
+    .axis { stroke: var(--border); stroke-width: 1; }
+    @media (prefers-color-scheme: dark) {
+      svg { --fg: #e6edf3; --muted: #8d96a0; --border: #30363d; --c1: #ff7b72; --c2: #79c0ff; --c3: #7ee787; }
+    }
   </style>
 
   <text class="title" x="20" y="28">Copy throughput</text>
