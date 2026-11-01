@@ -7,5 +7,8 @@ xbox360_title(
     edition = "2024",
     manifest = "xex.toml",
     std = True,
-    deps = ["//third-party/rust:tokio"],
+    deps = [
+        "//src/crates/xbox360:xbox360",
+        "//third-party/rust:tokio",
+    ],
 )

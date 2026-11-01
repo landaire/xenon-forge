@@ -1,95 +1,80 @@
-//! Multi-thread tokio on the Xbox 360: a work-stealing runtime with 2 workers
-//! runs async tasks (each awaits a timer), and spawn_blocking does an HTTP GET
-//! to the host web server over the xbox360 net backend.
+//! Multi-thread tokio on the Xbox 360: a work-stealing runtime with two
+//! workers runs async tasks that each await a timer, and `spawn_blocking`
+//! does an HTTP GET over `std::net` to the web server at the address of the
+//! first argument. The title prints the results to the debug output and
+//! ends.
+//!
+//! Start the server on the host, then run the title with its address:
+//!
+//! ```text
+//! python3 src/examples/tokweb/host_server.py
+//! bin/buck2 run //src/examples/tokweb:tokweb -- 192.168.1.10:8080
+//! ```
+
 #![no_main]
 
 use std::io::Read;
 use std::io::Write;
+use std::net::TcpStream;
 use std::sync::Arc;
 use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 
-#[unsafe(no_mangle)]
-pub static mut STAGE: u32 = 0;
-#[unsafe(no_mangle)]
-pub static mut BYTES: u32 = 0;
-
-core::arch::global_asm!(
-    ".globl _start",
-    ".section .text._start,\"ax\"",
-    "_start:",
-    "bl real_main",
-    "1: b 1b"
-);
-
-fn set_stage(stage: u32) {
-    unsafe {
-        core::ptr::write_volatile(&raw mut STAGE, stage);
-    }
-}
-
-fn http_get() -> std::io::Result<usize> {
-    const HOST: &str = "192.168.1.74:8080";
-
-    let mut stream = std::net::TcpStream::connect(HOST)?;
-    stream.write_all(
-        format!("GET / HTTP/1.0\r\nHost: {HOST}\r\nConnection: close\r\n\r\n").as_bytes(),
-    )?;
+/// The status line of `GET /` from `host`, and the length of the response.
+fn http_get(host: &str) -> std::io::Result<(String, usize)> {
+    let mut stream = TcpStream::connect(host)?;
+    write!(stream, "GET / HTTP/1.0\r\nHost: {host}\r\nConnection: close\r\n\r\n")?;
 
     let mut response = Vec::new();
     stream.read_to_end(&mut response)?;
-
-    Ok(response.len())
+    let status = response.split(|&b| b == b'\r').next().unwrap_or_default();
+    Ok((String::from_utf8_lossy(status).into_owned(), response.len()))
 }
 
-#[unsafe(no_mangle)]
-extern "C" fn real_main() {
-    set_stage(0x01);
+fn main_body() {
+    let Some(host) = std::env::args().nth(1) else {
+        println!("tokweb: pass the web server address, such as 192.168.1.10:8080");
+        return;
+    };
 
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(2)
         .enable_time()
         .build()
         .unwrap();
-    set_stage(0x02);
 
     runtime.block_on(async {
-        set_stage(0x03);
-
-        // Fan out async tasks across workers.
+        // Fan out async tasks across the workers.
         let sum = Arc::new(AtomicU32::new(0));
-        let mut handles = Vec::new();
-        for value in 1..=8u32 {
-            let sum = Arc::clone(&sum);
-            handles.push(tokio::spawn(async move {
-                tokio::time::sleep(Duration::from_millis(20)).await;
-                sum.fetch_add(value * value, Ordering::SeqCst);
-            }));
-        }
-
+        let handles: Vec<_> = (1..=8u32)
+            .map(|value| {
+                let sum = Arc::clone(&sum);
+                tokio::spawn(async move {
+                    tokio::time::sleep(Duration::from_millis(20)).await;
+                    sum.fetch_add(value * value, Ordering::SeqCst);
+                })
+            })
+            .collect();
         for handle in handles {
             handle.await.unwrap();
         }
+        // 1 + 4 + ... + 64.
+        println!("tokweb: 8 tasks, sum of squares {} (expected 204)", sum.load(Ordering::SeqCst));
 
-        // 0x04 | (204 << 8) when every task ran (1 + 4 + ... + 64 = 204).
-        set_stage(0x04 | (sum.load(Ordering::SeqCst) << 8));
-
-        // HTTP GET on the blocking pool (real threads).
-        match tokio::task::spawn_blocking(http_get).await.unwrap() {
-            Ok(len) => {
-                unsafe { core::ptr::write_volatile(&raw mut BYTES, len as u32) };
-                set_stage(0x55);
-            }
-            Err(_) => set_stage(0xEE),
+        // The blocking pool runs on real threads.
+        let request = host.clone();
+        match tokio::task::spawn_blocking(move || http_get(&request)).await.unwrap() {
+            Ok((status, length)) => println!("tokweb: GET http://{host}/: {status}, {length} bytes"),
+            Err(error) => println!("tokweb: GET http://{host}/: {error}"),
         }
     });
+}
 
-    loop {
-        let mut count = 0u32;
-        while count < 800_000 {
-            unsafe { core::ptr::read_volatile(&count) };
-            count = count.wrapping_add(1);
-        }
-    }
+xbox360::sys::bridged!(#[unsafe(no_mangle)] pub _start, main);
+
+extern "C" fn main(_context: u32) -> u32 {
+    main_body();
+    println!("tokweb: done");
+    xbox360::title::terminate()
 }
