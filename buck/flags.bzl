@@ -19,10 +19,6 @@ def xbox360_rustc_flags():
     return ["-Ccodegen-units=1"] + select({
         _RELEASE: ["-Copt-level=" + XBOX360_OPT_LEVEL, "-Cdebuginfo=full"],
         _RELEASE_NO_SYMBOLS: ["-Copt-level=" + XBOX360_OPT_LEVEL, "-Cdebuginfo=none"],
-        # The prebuilt PPC64 toolchain miscompiles unoptimized code: it emits
-        # a PPC64 relocation into ELF32 objects, and LLVM aborts at
-        # opt-level 1. Remove this once the toolchain has the fixes.
-        "xbox360//platforms:dev-ppc64-ilp32": ["-Copt-level=" + XBOX360_OPT_LEVEL, "-Cdebuginfo=full"],
         "DEFAULT": ["-Copt-level=0", "-Cdebuginfo=full"],
     })
 

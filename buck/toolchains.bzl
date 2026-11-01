@@ -177,7 +177,7 @@ def xbox360_toolchains(
     xbox360_clang(
         name = "clang",
         linker = _by_codegen(":rust-lld-ppc32", ":rust-lld-ppc64"),
-        target_triple = _by_codegen("powerpc-unknown-none-eabi", "powerpc64-unknown-xbox360"),
+        target_triple = _by_codegen("powerpc-unknown-none-eabi", "powerpc64-unknown-xbox360-ilp32"),
         tool = _by_codegen(":clang-ppc32", ":clang-ppc64"),
         visibility = ["PUBLIC"],
     )
@@ -215,7 +215,7 @@ def xbox360_toolchains(
         }),
         rustdoc_flags = rustdoc_flags,
         rustc_target_triple = select({
-            _XBOX360_PPC64_ILP32: "powerpc64-unknown-xbox360",
+            _XBOX360_PPC64_ILP32: "powerpc64-unknown-xbox360-ilp32",
             _XBOX360: "powerpc-unknown-xbox360",
             "DEFAULT": None,
         }),

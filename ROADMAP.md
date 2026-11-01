@@ -78,6 +78,13 @@ calling convention, `wchar_t` and `long double` already match; see
 - [ ] Bitfield layout and allocation order, checked against compiler probes.
 - [ ] Variadic aggregate arguments.
 
+## Code generation
+
+- [ ] A hypervisor code generation (`-m ppc64`) with a Rust target for the
+      LLVM triple `powerpc64-unknown-xbox360` (64-bit pointers).
+- [ ] C and C++ atomics on the ppc32 code generation. It uses stock LLVM,
+      which emits bare `lwarx`, so they trap on a devkit.
+
 ## Deferred
 
 - Millicode helpers, LZX compression of the XEX, retail encryption, real

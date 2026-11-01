@@ -3866,7 +3866,7 @@ fn strongest_failure_ordering(order: Ordering) -> Ordering {
     }
 }
 
-#[cfg(target_os = "xbox360")]
+#[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
 #[path = "atomic_xbox360.rs"]
 mod xbox360_prot;
 
@@ -3878,7 +3878,7 @@ unsafe fn atomic_store<T: Copy>(dst: *mut T, val: T, order: Ordering) {
     // condition is a constant, so that code generation leaves out the
     // intrinsic, which LLVM would lower to `__atomic_store_8`, also without
     // optimizations.
-    #[cfg(target_os = "xbox360")]
+    #[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
     if const { crate::mem::size_of::<T>() == 8 } {
         unsafe {
             fence(SeqCst);
@@ -3903,7 +3903,7 @@ unsafe fn atomic_store<T: Copy>(dst: *mut T, val: T, order: Ordering) {
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 unsafe fn atomic_load<T: Copy>(dst: *const T, order: Ordering) -> T {
     // As `atomic_store`: one `ld`, with a full barrier for every ordering.
-    #[cfg(target_os = "xbox360")]
+    #[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
     if const { crate::mem::size_of::<T>() == 8 } {
         unsafe {
             fence(SeqCst);
@@ -3928,7 +3928,7 @@ unsafe fn atomic_load<T: Copy>(dst: *const T, order: Ordering) -> T {
 #[cfg(target_has_atomic)]
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 unsafe fn atomic_swap<T: Copy>(dst: *mut T, val: T, order: Ordering) -> T {
-    #[cfg(target_os = "xbox360")]
+    #[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
     return unsafe { xbox360_prot::swap(dst, val) };
 
     // SAFETY: the caller must uphold the safety contract for `atomic_swap`.
@@ -3948,7 +3948,7 @@ unsafe fn atomic_swap<T: Copy>(dst: *mut T, val: T, order: Ordering) -> T {
 #[cfg(target_has_atomic)]
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 unsafe fn atomic_add<T: Copy, U: Copy>(dst: *mut T, val: U, order: Ordering) -> T {
-    #[cfg(target_os = "xbox360")]
+    #[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
     return unsafe { xbox360_prot::add(dst, val) };
 
     // SAFETY: the caller must uphold the safety contract for `atomic_add`.
@@ -3968,7 +3968,7 @@ unsafe fn atomic_add<T: Copy, U: Copy>(dst: *mut T, val: U, order: Ordering) -> 
 #[cfg(target_has_atomic)]
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 unsafe fn atomic_sub<T: Copy, U: Copy>(dst: *mut T, val: U, order: Ordering) -> T {
-    #[cfg(target_os = "xbox360")]
+    #[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
     return unsafe { xbox360_prot::sub(dst, val) };
 
     // SAFETY: the caller must uphold the safety contract for `atomic_sub`.
@@ -3996,7 +3996,7 @@ pub unsafe fn atomic_compare_exchange<T: Copy>(
     success: Ordering,
     failure: Ordering,
 ) -> Result<T, T> {
-    #[cfg(target_os = "xbox360")]
+    #[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
     return {
         let (v, ok) = unsafe { xbox360_prot::compare_exchange(dst, old, new) };
         if ok { Ok(v) } else { Err(v) }
@@ -4067,7 +4067,7 @@ unsafe fn atomic_compare_exchange_weak<T: Copy>(
     success: Ordering,
     failure: Ordering,
 ) -> Result<T, T> {
-    #[cfg(target_os = "xbox360")]
+    #[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
     return {
         let (v, ok) = unsafe { xbox360_prot::compare_exchange(dst, old, new) };
         if ok { Ok(v) } else { Err(v) }
@@ -4132,7 +4132,7 @@ unsafe fn atomic_compare_exchange_weak<T: Copy>(
 #[cfg(target_has_atomic)]
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 unsafe fn atomic_and<T: Copy, U: Copy>(dst: *mut T, val: U, order: Ordering) -> T {
-    #[cfg(target_os = "xbox360")]
+    #[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
     return unsafe { xbox360_prot::and(dst, val) };
 
     // SAFETY: the caller must uphold the safety contract for `atomic_and`
@@ -4151,7 +4151,7 @@ unsafe fn atomic_and<T: Copy, U: Copy>(dst: *mut T, val: U, order: Ordering) -> 
 #[cfg(target_has_atomic)]
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 unsafe fn atomic_nand<T: Copy, U: Copy>(dst: *mut T, val: U, order: Ordering) -> T {
-    #[cfg(target_os = "xbox360")]
+    #[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
     return unsafe { xbox360_prot::nand(dst, val) };
 
     // SAFETY: the caller must uphold the safety contract for `atomic_nand`
@@ -4170,7 +4170,7 @@ unsafe fn atomic_nand<T: Copy, U: Copy>(dst: *mut T, val: U, order: Ordering) ->
 #[cfg(target_has_atomic)]
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 unsafe fn atomic_or<T: Copy, U: Copy>(dst: *mut T, val: U, order: Ordering) -> T {
-    #[cfg(target_os = "xbox360")]
+    #[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
     return unsafe { xbox360_prot::or(dst, val) };
 
     // SAFETY: the caller must uphold the safety contract for `atomic_or`
@@ -4189,7 +4189,7 @@ unsafe fn atomic_or<T: Copy, U: Copy>(dst: *mut T, val: U, order: Ordering) -> T
 #[cfg(target_has_atomic)]
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 unsafe fn atomic_xor<T: Copy, U: Copy>(dst: *mut T, val: U, order: Ordering) -> T {
-    #[cfg(target_os = "xbox360")]
+    #[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
     return unsafe { xbox360_prot::xor(dst, val) };
 
     // SAFETY: the caller must uphold the safety contract for `atomic_xor`
@@ -4209,7 +4209,7 @@ unsafe fn atomic_xor<T: Copy, U: Copy>(dst: *mut T, val: U, order: Ordering) -> 
 #[cfg(target_has_atomic)]
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 unsafe fn atomic_max<T: Copy>(dst: *mut T, val: T, order: Ordering) -> T {
-    #[cfg(target_os = "xbox360")]
+    #[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
     return unsafe { xbox360_prot::max(dst, val) };
 
     // SAFETY: the caller must uphold the safety contract for `atomic_max`
@@ -4229,7 +4229,7 @@ unsafe fn atomic_max<T: Copy>(dst: *mut T, val: T, order: Ordering) -> T {
 #[cfg(target_has_atomic)]
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 unsafe fn atomic_min<T: Copy>(dst: *mut T, val: T, order: Ordering) -> T {
-    #[cfg(target_os = "xbox360")]
+    #[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
     return unsafe { xbox360_prot::min(dst, val) };
 
     // SAFETY: the caller must uphold the safety contract for `atomic_min`
@@ -4249,7 +4249,7 @@ unsafe fn atomic_min<T: Copy>(dst: *mut T, val: T, order: Ordering) -> T {
 #[cfg(target_has_atomic)]
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 unsafe fn atomic_umax<T: Copy>(dst: *mut T, val: T, order: Ordering) -> T {
-    #[cfg(target_os = "xbox360")]
+    #[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
     return unsafe { xbox360_prot::umax(dst, val) };
 
     // SAFETY: the caller must uphold the safety contract for `atomic_umax`
@@ -4269,7 +4269,7 @@ unsafe fn atomic_umax<T: Copy>(dst: *mut T, val: T, order: Ordering) -> T {
 #[cfg(target_has_atomic)]
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 unsafe fn atomic_umin<T: Copy>(dst: *mut T, val: T, order: Ordering) -> T {
-    #[cfg(target_os = "xbox360")]
+    #[cfg(all(target_os = "xbox360", target_arch = "powerpc"))]
     return unsafe { xbox360_prot::umin(dst, val) };
 
     // SAFETY: the caller must uphold the safety contract for `atomic_umin`

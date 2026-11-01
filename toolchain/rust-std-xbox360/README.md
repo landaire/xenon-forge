@@ -38,7 +38,7 @@ Wakes are exact and nothing polls.
 
 ## Protected atomics
 
-The devkit kernel traps `lwarx`/`stwcx.` that are not in the interrupt-bracketed "protected reservation" form existing titles use (the hypervisor cannot preserve a reservation across an interrupt). LLVM emits bare lwarx/stwcx, so `src/core/sync/atomic_xbox360.rs` provides a protected compare-and-swap in inline asm and `core::sync::atomic`'s RMW/CAS helpers are redirected to it for xbox360. The recognized form (matched from real titles) is:
+The devkit kernel traps `lwarx`/`stwcx.` that are not in the interrupt-bracketed "protected reservation" form existing titles use (the hypervisor cannot preserve a reservation across an interrupt). The LLVM fork of the PPC64-ILP32 code generation emits this form for every atomic. The stock LLVM of the default PPC32 code generation emits bare lwarx/stwcx, so there `src/core/sync/atomic_xbox360.rs` provides a protected compare-and-swap in inline asm and `core::sync::atomic`'s RMW/CAS helpers are redirected to it. The recognized form (matched from real titles) is:
 
     mfmsr rS                 ; once, before the loop
   loop:

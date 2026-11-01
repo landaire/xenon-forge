@@ -45,17 +45,6 @@ constraint(
     visibility = ["PUBLIC"],
 )
 
-# dev on the PPC64 ILP32 code generation, which buck/flags.bzl keeps
-# optimized until the PPC64 toolchain compiles unoptimized code.
-config_setting(
-    name = "dev-ppc64-ilp32",
-    constraint_values = [
-        ":codegen[ppc64-ilp32]",
-        ":mode[dev]",
-    ],
-    visibility = ["PUBLIC"],
-)
-
 # Which standard library crates the Rust toolchain provides to a crate:
 # none while building those crates themselves, core and alloc for
 # no_std titles, or std.

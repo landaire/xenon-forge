@@ -852,7 +852,7 @@ match when PE/COFF output is implemented.
 
 The current experimental patch implements the evidence-backed subset:
 
-- The `powerpc64-unknown-xbox360` triple selects the PPC64 ISA with an ILP32
+- The `powerpc64-unknown-xbox360-ilp32` triple selects the PPC64 ISA with an ILP32
   data layout and 32-bit address register classes.
 - Clang uses 64-bit IEEE `long double` and 16-bit unsigned `wchar_t`.
 - A legal `i64` argument consumes one of `X3` through `X10`.

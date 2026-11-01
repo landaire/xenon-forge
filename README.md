@@ -211,7 +211,7 @@ resources = {
 
 ### LLVM Fork
 
-Our [LLVM fork](https://github.com/llvm/llvm-project/compare/main...landaire-contrib:llvm-project:xbox360-abi-upstream-complete) adds the `powerpc64-unknown-xbox360` target and VMX128 support. It is optional; the default PPC32 target remains supported.
+Our [LLVM fork](https://github.com/llvm/llvm-project/compare/main...landaire-contrib:llvm-project:xbox360-abi-upstream-complete) adds the `powerpc64-unknown-xbox360-ilp32` target of titles, VMX128 support and the `powerpc64-unknown-xbox360` hypervisor target with 64-bit pointers. It is optional; the default PPC32 target remains supported.
 
 LLVM auto-vectorizes scalar loops that the SDK compiler leaves scalar:
 

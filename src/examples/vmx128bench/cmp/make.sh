@@ -21,7 +21,7 @@ mkdir -p "$dest"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-base=(--target=powerpc64-unknown-xbox360 -ffreestanding -fno-builtin -fms-extensions
+base=(--target=powerpc64-unknown-xbox360-ilp32 -ffreestanding -fno-builtin -fms-extensions
   -ffunction-sections -fdata-sections -fno-ident -fno-addrsig -fno-asynchronous-unwind-tables -g0)
 
 # prefix : source : flags

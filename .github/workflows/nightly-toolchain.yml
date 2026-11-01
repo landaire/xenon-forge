@@ -186,7 +186,7 @@ jobs:
           python3 src/tools/package_toolchain.py \
             --rust-dist "$RUST_DIST" \
             --llvm-dist "$LLVM_DIST" \
-            --target-spec targets/powerpc64-unknown-xbox360.json \
+            --target-spec targets/powerpc64-unknown-xbox360-ilp32.json \
             --out-dir dist \
             --repository "$GITHUB_REPOSITORY" \
             --release-tag "$RELEASE_TAG" \
@@ -214,7 +214,7 @@ jobs:
           "$root/bin/rustc" --crate-type=lib --emit=obj \
             "$RUNNER_TEMP/smoke.rs" -o "$RUNNER_TEMP/smoke-rust.o"
           printf 'unsigned answer(void) { return 42; }\n' > "$RUNNER_TEMP/smoke.c"
-          "$root/bin/clang" --target=powerpc64-unknown-xbox360 \
+          "$root/bin/clang" --target=powerpc64-unknown-xbox360-ilp32 \
             -c "$RUNNER_TEMP/smoke.c" -o "$RUNNER_TEMP/smoke-c.o"
           "$root/bin/llvm-objdump" -h "$RUNNER_TEMP/smoke-c.o"
 

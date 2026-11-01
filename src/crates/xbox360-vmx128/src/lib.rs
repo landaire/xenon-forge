@@ -1,6 +1,6 @@
 //! Xenon VMX128 vector operations.
 //!
-//! The PPC64 toolchain (`powerpc64-unknown-xbox360`) compiles with
+//! The PPC64 toolchain (`powerpc64-unknown-xbox360-ilp32`) compiles with
 //! `+altivec,+vmx128`. LLVM then allocates all 128 vector registers and
 //! emits the VMX128 forms for ordinary vector code, so `core::simd`
 //! arithmetic, comparisons, selects, shuffles and conversions need nothing

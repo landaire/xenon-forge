@@ -940,7 +940,7 @@ fn refuses_vector_accesses_across_moved_instructions() {
     );
 }
 
-/// `llc -mtriple=powerpc64-unknown-xbox360 -mattr=+altivec,+vmx128 -O2`
+/// `llc -mtriple=powerpc64-unknown-xbox360-ilp32 -mattr=+altivec,+vmx128 -O2`
 /// output, without comments, of the function of
 /// `rewrites_epilogue_after_altivec_restores`. v126 and v127 are saved
 /// below the stack pointer before the allocation and restored before the

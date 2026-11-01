@@ -5,7 +5,7 @@ linked title.
     python3 gen/insn_stats.py ELF [OBJDUMP] > stats.csv
 
 Disassembles ELF with OBJDUMP (default /var/tmp/llvm-vmx128-build/bin/llvm-objdump,
-triple powerpc64-unknown-xbox360, +vmx128) and prints one CSV line per
+triple powerpc64-unknown-xbox360-ilp32, +vmx128) and prints one CSV line per
 kernel symbol (prefix msvc_, l*, c*, r*):
 
   name, insns, loop_insns, vec_classic, vec_128, loop_vec, max_vreg,
@@ -49,7 +49,7 @@ def vector_regs(mn, ops):
 def main():
     elf = sys.argv[1]
     od = sys.argv[2] if len(sys.argv) > 2 else '/var/tmp/llvm-vmx128-build/bin/llvm-objdump'
-    text = subprocess.run([od, '-d', '--no-show-raw-insn', '--triple=powerpc64-unknown-xbox360',
+    text = subprocess.run([od, '-d', '--no-show-raw-insn', '--triple=powerpc64-unknown-xbox360-ilp32',
                            '--mattr=+vmx128', elf], capture_output=True, text=True, check=True).stdout
     # symbols sharing an address (identical functions folded by the
     # compiler) appear once in the disassembly; report every name

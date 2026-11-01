@@ -11,7 +11,7 @@ from pathlib import Path
 FINGERPRINT_FILES = (
     "buck/custom_toolchain.bzl",
     "buck/toolchains.bzl",
-    "targets/powerpc64-unknown-xbox360.json",
+    "targets/powerpc64-unknown-xbox360-ilp32.json",
     "src/tools/package_toolchain.py",
     "src/tools/toolchain_fingerprint.py",
 )

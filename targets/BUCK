@@ -3,7 +3,7 @@ filegroup(
     name = "specs",
     srcs = [
         "powerpc-unknown-xbox360.json",
-        "powerpc64-unknown-xbox360.json",
+        "powerpc64-unknown-xbox360-ilp32.json",
     ],
     visibility = ["PUBLIC"],
 )

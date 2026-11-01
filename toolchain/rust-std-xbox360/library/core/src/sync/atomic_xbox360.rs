@@ -3,8 +3,10 @@
 //! The hypervisor cannot preserve an `lwarx` reservation across an interrupt,
 //! so `lwarx`/`stwcx.` must be bracketed by `mtmsrd` (disable external
 //! interrupts) exactly the way existing titles do it, or the devkit kernel
-//! traps them as "unprotected reservations". LLVM emits bare lwarx/stwcx, so
-//! `core::sync::atomic`'s RMW/CAS helpers call into here instead on this target.
+//! traps them as "unprotected reservations". The stock LLVM of the powerpc
+//! code generation emits bare lwarx/stwcx, so `core::sync::atomic`'s RMW/CAS
+//! helpers call into here instead on that target. The LLVM of the powerpc64
+//! ILP32 code generation emits the protected form itself.
 //!
 //! All operations are full-barrier (the `Ordering` is ignored: conservative but
 //! always correct). Atomic loads/stores stay as plain aligned accesses (they do
