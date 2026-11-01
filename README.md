@@ -185,7 +185,7 @@ xex-link input.elf output.xex \
   --resource FONT=<artifact path>
 ```
 
-`xex-link link-script link.x --manifest xex.toml` writes the GNU ld script that the ELF is linked with: code one page above `load_address` (the first page holds the headers), and code, read-only data, data and zero-initialized data each on their own pages (4 KB with `SMALL_PAGES`, otherwise 64 KB). The title rules use it unless a target sets `link_script`.
+`xex-link link-script link.x --manifest xex.toml` writes the GNU ld script that the ELF is linked with: code one page above `load_address` (the first page holds the headers), and code, read-only data, data and zero-initialized data each on their own pages (4 KB with `SMALL_PAGES`, otherwise 64 KB). The title rules use it unless a target sets `link_script`, as [`src/examples/stdhello`](/src/examples/stdhello) does.
 
 As part of our build integration, xex-link reads a manifest (`xex.toml` in the project's directory) which contains attributes that will make their way into the XEX header:
 

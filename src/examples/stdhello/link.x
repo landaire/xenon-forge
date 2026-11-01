@@ -1,4 +1,8 @@
-/* Written by `xex-link link-script` for Cargo builds; Buck derives the same script from xex.toml. */
+/* A link script that the title sets (`link_script` in BUCK, and -Tlink.x in
+ * .cargo/config.toml for Cargo builds) instead of the one xex-link derives
+ * from xex.toml. This is the derived script, written with
+ * `xex-link link-script link.x --manifest xex.toml`, to edit from. It does
+ * not follow later changes to xex.toml. */
 ENTRY(_start)
 
 SECTIONS {
