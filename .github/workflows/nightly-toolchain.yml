@@ -123,11 +123,16 @@ jobs:
           ref: ${{ needs.check.outputs.bootstrap_commit }}
           path: toolchain/buck2-rustc-bootstrap
 
+      # Build the PPC64 toolchain from the checked-out bootstrap cell rather
+      # than downloading the published one.
       - name: Use the checked-out bootstrap cell
         run: |
           cat > .buckconfig.local <<'EOF'
           [external_cells]
             rustc_bootstrap = disabled
+
+          [xbox360]
+            ppc64_toolchain = source
           EOF
 
       - name: Free runner disk space
