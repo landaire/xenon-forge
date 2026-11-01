@@ -197,7 +197,7 @@ LLVM auto-vectorizes scalar loops that the SDK compiler leaves scalar:
 
 On 1024-element compiler-generated C kernels, the scalar-to-AltiVec-to-VMX128 progression depends on the workload:
 
-![Scalar, classic AltiVec, and VMX128 compute speed](docs/vmx128-compute-speed.svg)
+![Scalar, classic AltiVec, and VMX128 compute speed](docs/vmx128-compute-comparison.svg)
 
 Vector loads improve cached copies over scalar code; large copies are memory-bound:
 
