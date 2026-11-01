@@ -50,7 +50,23 @@ pub fn collect_sections(elf: &object::File, base: u32) -> Result<Vec<pe::Section
                 pe::SCN_UNINITIALIZED_DATA | pe::SCN_MEM_READ | pe::SCN_MEM_WRITE,
                 Vec::new(),
             ),
-            _ => continue,
+            // Allocated sections of other ELF types, such as .init_array,
+            // load like the section their flags describe.
+            _ => {
+                const SHF_WRITE: u64 = 0x1;
+                const SHF_EXECINSTR: u64 = 0x4;
+                let SectionFlags::Elf { sh_flags } = sec.flags() else {
+                    continue;
+                };
+                let characteristics = if sh_flags & SHF_EXECINSTR != 0 {
+                    pe::SCN_CODE | pe::SCN_MEM_EXECUTE | pe::SCN_MEM_READ
+                } else if sh_flags & SHF_WRITE != 0 {
+                    pe::SCN_INITIALIZED_DATA | pe::SCN_MEM_READ | pe::SCN_MEM_WRITE
+                } else {
+                    pe::SCN_INITIALIZED_DATA | pe::SCN_MEM_READ
+                };
+                (characteristics, section_data(&sec)?)
+            }
         };
 
         sections.push(pe::Section {
