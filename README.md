@@ -195,9 +195,9 @@ LLVM auto-vectorizes scalar loops that the SDK compiler leaves scalar:
 | Clang `-O3 -ffast-math`, VMX128 |                                     26 |
 | Rust `-O3`, VMX128              |                                     24 |
 
-VMX128 has the same cost as classic AltiVec for equivalent instructions. Its dot-product instruction and larger register file provide the main gains:
+On 1024-element compiler-generated C kernels, the scalar-to-AltiVec-to-VMX128 progression depends on the workload:
 
-![VMX128 compute speedup over classic AltiVec](docs/vmx128-compute-speed.svg)
+![Scalar, classic AltiVec, and VMX128 compute speed](docs/vmx128-compute-speed.svg)
 
 Vector loads improve cached copies over scalar code; large copies are memory-bound:
 
