@@ -5,14 +5,7 @@
 
 use core::fmt;
 
-use xbox360_sys::lib_index::XBOXKRNL;
-
-xbox360_sys::import_thunk!(
-    /// `DbgPrint` with one string argument.
-    dbg_print_string(format: *const u8, text: *const u8) -> u32,
-    lib = XBOXKRNL,
-    ordinal = 0x003
-);
+use xbox360_sys::xboxkrnl::DbgPrint;
 
 /// Text bytes per `DbgPrint` call. The buffer holds one more for the NUL.
 const CAPACITY: usize = 255;
@@ -44,7 +37,7 @@ impl DebugOutput {
 
         // SAFETY: the format is a NUL-terminated "%s" and the buffer is
         // NUL-terminated at `length`.
-        unsafe { dbg_print_string(c"%s".as_ptr().cast(), self.buffer.as_ptr()) };
+        unsafe { DbgPrint(c"%s".as_ptr().cast(), self.buffer.as_ptr()) };
 
         self.length = 0;
     }

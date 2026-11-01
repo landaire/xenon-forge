@@ -6,7 +6,7 @@
 #![no_std]
 #![cfg(any(target_os = "xbox360", xbox360_docs))]
 
-use core::num::NonZeroU32;
+use core::num::NonZeroU64;
 use core::sync::atomic::Ordering;
 use core::time::Duration;
 
@@ -55,7 +55,7 @@ impl Timebase {
     /// Time from `earlier` to `self`, zero if `earlier` is later.
     pub fn duration_since(self, earlier: Self, frequency: TimebaseFrequency) -> Duration {
         let ticks = self.0.saturating_sub(earlier.0);
-        let hertz = u64::from(frequency.hertz().get());
+        let hertz = frequency.hertz().get();
         let nanoseconds = (ticks % hertz) * 1_000_000_000 / hertz;
 
         Duration::new(ticks / hertz, nanoseconds as u32)
@@ -64,7 +64,7 @@ impl Timebase {
 
 /// Rate of the time base in ticks per second.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TimebaseFrequency(NonZeroU32);
+pub struct TimebaseFrequency(NonZeroU64);
 
 impl TimebaseFrequency {
     /// The kernel's performance counter frequency, which is the time base
@@ -74,13 +74,13 @@ impl TimebaseFrequency {
     ///
     /// If the kernel reports a frequency of zero.
     pub fn query() -> Self {
-        match NonZeroU32::new(xboxkrnl::KeQueryPerformanceFrequency()) {
+        match NonZeroU64::new(xboxkrnl::KeQueryPerformanceFrequency()) {
             Some(hertz) => Self(hertz),
             None => panic!("the kernel reported a time base frequency of zero"),
         }
     }
 
-    pub const fn hertz(self) -> NonZeroU32 {
+    pub const fn hertz(self) -> NonZeroU64 {
         self.0
     }
 }

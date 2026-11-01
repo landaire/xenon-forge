@@ -1,0 +1,15 @@
+[package]
+name = "xbox360-bindgen"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Generates the Rust bindings and import thunks of xbox360-sys from its C headers"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+bindgen = { version = "0.72", default-features = false, features = ["runtime", "prettyplease"] }
+clang = { version = "2", features = ["runtime", "clang_10_0"] }
+clap = { version = "4", features = ["derive"] }
+
+# A host tool outside the console workspace.
+[workspace]

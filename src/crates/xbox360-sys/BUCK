@@ -4,6 +4,8 @@ rust_library(
     crate = "xbox360_sys",
     crate_root = "src/lib.rs",
     edition = "2024",
+    # The thunk library of src/sdk, as build.rs gives it to Cargo builds.
+    env = {"XBOX360_SDK_THUNKS": "$(location //src/sdk:thunks)"},
     visibility = ["PUBLIC"],
 )
 

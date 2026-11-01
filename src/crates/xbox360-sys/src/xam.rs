@@ -19,8 +19,6 @@ mod video;
 mod win32;
 
 #[cfg(any(target_os = "xbox360", xbox360_docs))]
-use crate::lib_index::XAM;
-#[cfg(any(target_os = "xbox360", xbox360_docs))]
 use crate::status::Hresult;
 #[cfg(any(target_os = "xbox360", xbox360_docs))]
 use crate::xboxkrnl::AccessMask;
@@ -110,52 +108,42 @@ pub use self::win32::WaitResult;
 pub use crate::status::Win32ErrorCode;
 pub use crate::xboxkrnl::Boolean;
 
-crate::import_thunk!(
+import!(
     /// Initializes Winsock.
-    pub NetDll_WSAStartup(caller: XnCaller, version: WinsockVersion, data: *mut WsaData) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x001
+    pub NetDll_WSAStartup(caller: XnCaller, version: WinsockVersion, data: *mut WsaData) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Creates a socket. Returns the socket or [`Socket::INVALID`].
     pub NetDll_socket(
         caller: XnCaller,
         af: AddressFamily,
         ty: SocketType,
         protocol: Protocol,
-    ) -> Socket,
-    lib = XAM,
-    ordinal = 0x003
+    ) -> Socket
 );
 
-crate::import_thunk!(
+import!(
     /// Closes a socket.
-    pub NetDll_closesocket(caller: XnCaller, socket: Socket) -> i32,
-    lib = XAM,
-    ordinal = 0x004
+    pub NetDll_closesocket(caller: XnCaller, socket: Socket) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Disables sends, receives or both on a socket.
-    pub NetDll_shutdown(caller: XnCaller, socket: Socket, how: ShutdownHow) -> i32,
-    lib = XAM,
-    ordinal = 0x005
+    pub NetDll_shutdown(caller: XnCaller, socket: Socket, how: ShutdownHow) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Controls a socket mode.
     pub NetDll_ioctlsocket(
         caller: XnCaller,
         socket: Socket,
         command: IoctlCommand,
         argument: *mut u32,
-    ) -> i32,
-    lib = XAM,
-    ordinal = 0x006
+    ) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Sets a socket option.
     pub NetDll_setsockopt(
         caller: XnCaller,
@@ -164,12 +152,10 @@ crate::import_thunk!(
         name: SocketOption,
         value: *const u8,
         length: i32,
-    ) -> i32,
-    lib = XAM,
-    ordinal = 0x007
+    ) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Reads a socket option.
     pub NetDll_getsockopt(
         caller: XnCaller,
@@ -178,64 +164,50 @@ crate::import_thunk!(
         name: SocketOption,
         value: *mut u8,
         length: *mut i32,
-    ) -> i32,
-    lib = XAM,
-    ordinal = 0x008
+    ) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the local address of a socket.
     pub NetDll_getsockname(
         caller: XnCaller,
         socket: Socket,
         name: *mut u8,
         length: *mut i32,
-    ) -> i32,
-    lib = XAM,
-    ordinal = 0x009
+    ) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the remote address of a connected socket.
     pub NetDll_getpeername(
         caller: XnCaller,
         socket: Socket,
         name: *mut u8,
         length: *mut i32,
-    ) -> i32,
-    lib = XAM,
-    ordinal = 0x00A
+    ) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Binds a socket to a local address.
-    pub NetDll_bind(caller: XnCaller, socket: Socket, name: *const u8, length: i32) -> i32,
-    lib = XAM,
-    ordinal = 0x00B
+    pub NetDll_bind(caller: XnCaller, socket: Socket, name: *const u8, length: i32) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Connects a socket to a remote address.
-    pub NetDll_connect(caller: XnCaller, socket: Socket, name: *const u8, length: i32) -> i32,
-    lib = XAM,
-    ordinal = 0x00C
+    pub NetDll_connect(caller: XnCaller, socket: Socket, name: *const u8, length: i32) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Places a socket in the listening state.
-    pub NetDll_listen(caller: XnCaller, socket: Socket, backlog: i32) -> i32,
-    lib = XAM,
-    ordinal = 0x00D
+    pub NetDll_listen(caller: XnCaller, socket: Socket, backlog: i32) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Accepts a connection. Returns the new socket or [`Socket::INVALID`].
-    pub NetDll_accept(caller: XnCaller, socket: Socket, name: *mut u8, length: *mut i32) -> Socket,
-    lib = XAM,
-    ordinal = 0x00E
+    pub NetDll_accept(caller: XnCaller, socket: Socket, name: *mut u8, length: *mut i32) -> Socket
 );
 
-crate::import_thunk!(
+import!(
     /// Waits until sockets are readable, writable or in error. Returns the number of ready sockets.
     pub NetDll_select(
         caller: XnCaller,
@@ -244,12 +216,10 @@ crate::import_thunk!(
         write: *mut FdSet,
         except: *mut FdSet,
         timeout: *const TimeVal,
-    ) -> i32,
-    lib = XAM,
-    ordinal = 0x00F
+    ) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Receives from a connected socket. Returns the byte count or `SOCKET_ERROR`.
     pub NetDll_recv(
         caller: XnCaller,
@@ -257,12 +227,10 @@ crate::import_thunk!(
         buffer: *mut u8,
         length: i32,
         flags: MessageFlags,
-    ) -> i32,
-    lib = XAM,
-    ordinal = 0x012
+    ) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Receives a datagram and its source address.
     pub NetDll_recvfrom(
         caller: XnCaller,
@@ -272,12 +240,10 @@ crate::import_thunk!(
         flags: MessageFlags,
         from: *mut u8,
         from_length: *mut i32,
-    ) -> i32,
-    lib = XAM,
-    ordinal = 0x014
+    ) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Sends on a connected socket. Returns the byte count or `SOCKET_ERROR`.
     pub NetDll_send(
         caller: XnCaller,
@@ -285,12 +251,10 @@ crate::import_thunk!(
         buffer: *const u8,
         length: i32,
         flags: MessageFlags,
-    ) -> i32,
-    lib = XAM,
-    ordinal = 0x016
+    ) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Sends a datagram to an address.
     pub NetDll_sendto(
         caller: XnCaller,
@@ -300,119 +264,91 @@ crate::import_thunk!(
         flags: MessageFlags,
         to: *const u8,
         to_length: i32,
-    ) -> i32,
-    lib = XAM,
-    ordinal = 0x018
+    ) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Returns the last Winsock error of the current thread.
-    pub safe NetDll_WSAGetLastError(caller: XnCaller) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x01B
+    pub safe NetDll_WSAGetLastError(caller: XnCaller) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Associates network events of a socket with an event object. A null `event` and no events end the association.
     pub NetDll_WSAEventSelect(
         caller: XnCaller,
         socket: Socket,
         event: Handle,
         events: NetworkEvents,
-    ) -> i32,
-    lib = XAM,
-    ordinal = 0x023
+    ) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Initializes the network stack. `params` may be null.
-    pub NetDll_XNetStartup(caller: XnCaller, params: *const XnetStartupParams) -> i32,
-    lib = XAM,
-    ordinal = 0x033
+    pub NetDll_XNetStartup(caller: XnCaller, params: *const XnetStartupParams) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// [`NetDll_XNetStartup`] with a third argument. The 2.0.6717 dashboard
     /// calls it in place of `NetDll_XNetStartup` when `XamGetSystemVersion`
     /// is 0x200A3200 or more, with `version` 0x2017F400, and treats the
     /// result as that of `NetDll_XNetStartup`.
-    pub NetDll_XNetStartupVersion(caller: XnCaller, params: *const XnetStartupParams, version: u32) -> i32,
-    lib = XAM,
-    ordinal = 0x050
+    pub NetDll_XNetStartupVersion(caller: XnCaller, params: *const XnetStartupParams, version: u32) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Fills a buffer with random bytes.
-    pub NetDll_XNetRandom(caller: XnCaller, buffer: *mut u8, length: u32) -> i32,
-    lib = XAM,
-    ordinal = 0x035
+    pub NetDll_XNetRandom(caller: XnCaller, buffer: *mut u8, length: u32) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the title XNADDR.
-    pub NetDll_XNetGetTitleXnAddr(caller: XnCaller, address: *mut u8) -> XnAddrStatus,
-    lib = XAM,
-    ordinal = 0x049
+    pub NetDll_XNetGetTitleXnAddr(caller: XnCaller, address: *mut u8) -> XnAddrStatus
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the debug XNADDR.
-    pub NetDll_XNetGetDebugXnAddr(caller: XnCaller, address: *mut u8) -> XnAddrStatus,
-    lib = XAM,
-    ordinal = 0x04A
+    pub NetDll_XNetGetDebugXnAddr(caller: XnCaller, address: *mut u8) -> XnAddrStatus
 );
 
-crate::import_thunk!(
+import!(
     /// Returns the link status of the network interface.
-    pub safe NetDll_XNetGetEthernetLinkStatus(caller: XnCaller) -> EthernetLinkStatus,
-    lib = XAM,
-    ordinal = 0x04B
+    pub safe NetDll_XNetGetEthernetLinkStatus(caller: XnCaller) -> EthernetLinkStatus
 );
 
-crate::import_thunk!(
+import!(
     /// Reads a network stack option.
     pub NetDll_XNetGetOpt(
         caller: XnCaller,
         option: XnetOption,
         value: *mut u8,
         length: *mut i32,
-    ) -> i32,
-    lib = XAM,
-    ordinal = 0x04E
+    ) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Writes a network stack option.
     pub NetDll_XNetSetOpt(
         caller: XnCaller,
         option: XnetOption,
         value: *const u8,
         length: u32,
-    ) -> i32,
-    lib = XAM,
-    ordinal = 0x04F
+    ) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Reads the saved network configuration, a 0x1EC-byte record, into `params`.
-    pub NetDll_XnpLoadConfigParams(caller: XnCaller, params: *mut u8) -> Hresult,
-    lib = XAM,
-    ordinal = 0x065
+    pub NetDll_XnpLoadConfigParams(caller: XnCaller, params: *mut u8) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Saves the 0x1EC-byte network configuration record `params`. Returns `E_PENDING` while
     /// the save has not finished; the 2.0.6717 dashboard calls it again until it does.
-    pub NetDll_XnpSaveConfigParams(caller: XnCaller, params: *const u8) -> Hresult,
-    lib = XAM,
-    ordinal = 0x066
+    pub NetDll_XnpSaveConfigParams(caller: XnCaller, params: *const u8) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Applies a network configuration.
-    pub NetDll_XnpConfig(caller: XnCaller, config: *const u8, flags: u32) -> i32,
-    lib = XAM,
-    ordinal = 0x068
+    pub NetDll_XnpConfig(caller: XnCaller, config: *const u8, flags: u32) -> i32
 );
 
 /// [`NetDll_XnpConfig`] with a typed record. The meaning of `flags` is not
@@ -429,14 +365,12 @@ pub unsafe fn xnp_config(caller: XnCaller, config: &XnetConfigParams, flags: u32
     unsafe { NetDll_XnpConfig(caller, (config as *const XnetConfigParams).cast(), flags) }
 }
 
-crate::import_thunk!(
+import!(
     /// Stores the network configuration status.
-    pub NetDll_XnpGetConfigStatus(caller: XnCaller, status: *mut u8) -> i32,
-    lib = XAM,
-    ordinal = 0x069
+    pub NetDll_XnpGetConfigStatus(caller: XnCaller, status: *mut u8) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Installs or removes Ethernet frame transmit and receive callbacks.
     pub NetDll_XnpEthernetInterceptSetCallbacks(
         caller: XnCaller,
@@ -444,54 +378,40 @@ crate::import_thunk!(
         receive: usize,
         context: usize,
         flags: u32,
-    ) -> i32,
-    lib = XAM,
-    ordinal = 0x06D
+    ) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Transmits a raw Ethernet frame.
-    pub NetDll_XnpEthernetInterceptXmit(caller: XnCaller, frame: *mut u8, length: u32) -> u32,
-    lib = XAM,
-    ordinal = 0x06E
+    pub NetDll_XnpEthernetInterceptXmit(caller: XnCaller, frame: *mut u8, length: u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Delivers a raw Ethernet frame to the network stack.
-    pub NetDll_XnpEthernetInterceptRecv(caller: XnCaller, frame: *mut u8, length: u32) -> u32,
-    lib = XAM,
-    ordinal = 0x06F
+    pub NetDll_XnpEthernetInterceptRecv(caller: XnCaller, frame: *mut u8, length: u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the list of open sockets. `count` holds the capacity on entry and the count on return.
-    pub NetDll_XnpGetActiveSocketList(caller: XnCaller, buffer: *mut u8, count: *mut u32) -> u32,
-    lib = XAM,
-    ordinal = 0x07A
+    pub NetDll_XnpGetActiveSocketList(caller: XnCaller, buffer: *mut u8, count: *mut u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Informs the network stack that the system time changed.
-    pub NetDll_XnpNoteSystemTime(caller: XnCaller) -> u32,
-    lib = XAM,
-    ordinal = 0x07B
+    pub NetDll_XnpNoteSystemTime(caller: XnCaller) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Initializes the HTTP client.
-    pub NetDll_XHttpStartup(caller: XnCaller, reserved: u32, parameters: u32) -> u32,
-    lib = XAM,
-    ordinal = 0x0C9
+    pub NetDll_XHttpStartup(caller: XnCaller, reserved: u32, parameters: u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Shuts down the HTTP client.
-    pub NetDll_XHttpShutdown(caller: XnCaller) -> u32,
-    lib = XAM,
-    ordinal = 0x0CA
+    pub NetDll_XHttpShutdown(caller: XnCaller) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Opens an HTTP session. Returns the session handle or 0.
     pub NetDll_XHttpOpen(
         caller: XnCaller,
@@ -500,19 +420,15 @@ crate::import_thunk!(
         proxy: u32,
         bypass: u32,
         flags: u32,
-    ) -> u32,
-    lib = XAM,
-    ordinal = 0x0CB
+    ) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Closes an HTTP handle.
-    pub NetDll_XHttpCloseHandle(caller: XnCaller, handle: u32) -> u32,
-    lib = XAM,
-    ordinal = 0x0CC
+    pub NetDll_XHttpCloseHandle(caller: XnCaller, handle: u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Opens an HTTP connection to a server. Returns the connection handle or 0.
     pub NetDll_XHttpConnect(
         caller: XnCaller,
@@ -520,12 +436,10 @@ crate::import_thunk!(
         server: *const u8,
         port: u32,
         flags: u32,
-    ) -> u32,
-    lib = XAM,
-    ordinal = 0x0CD
+    ) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Installs a status callback on an HTTP handle.
     pub NetDll_XHttpSetStatusCallback(
         caller: XnCaller,
@@ -533,12 +447,10 @@ crate::import_thunk!(
         callback: u32,
         flags: u32,
         reserved: u32,
-    ) -> u32,
-    lib = XAM,
-    ordinal = 0x0CE
+    ) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Opens an HTTP request. Returns the request handle or 0.
     pub NetDll_XHttpOpenRequest(
         caller: XnCaller,
@@ -549,12 +461,10 @@ crate::import_thunk!(
         referrer: u32,
         accept: u32,
         flags: u32,
-    ) -> u32,
-    lib = XAM,
-    ordinal = 0x0CF
+    ) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Sends an HTTP request.
     pub NetDll_XHttpSendRequest(
         caller: XnCaller,
@@ -565,19 +475,15 @@ crate::import_thunk!(
         optional_length: u32,
         total_length: u32,
         context: u32,
-    ) -> u32,
-    lib = XAM,
-    ordinal = 0x0D1
+    ) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Waits for the response to an HTTP request.
-    pub NetDll_XHttpReceiveResponse(caller: XnCaller, request: u32, reserved: u32) -> u32,
-    lib = XAM,
-    ordinal = 0x0D2
+    pub NetDll_XHttpReceiveResponse(caller: XnCaller, request: u32, reserved: u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Reads response header information.
     pub NetDll_XHttpQueryHeaders(
         caller: XnCaller,
@@ -587,12 +493,10 @@ crate::import_thunk!(
         buffer: *mut u32,
         length: *mut u32,
         index: u32,
-    ) -> u32,
-    lib = XAM,
-    ordinal = 0x0D3
+    ) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Reads response body data. The byte count is stored at `read`.
     pub NetDll_XHttpReadData(
         caller: XnCaller,
@@ -600,12 +504,10 @@ crate::import_thunk!(
         buffer: *mut u8,
         length: u32,
         read: *mut u32,
-    ) -> u32,
-    lib = XAM,
-    ordinal = 0x0D4
+    ) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Sets an option on an HTTP handle.
     pub NetDll_XHttpSetOption(
         caller: XnCaller,
@@ -613,90 +515,70 @@ crate::import_thunk!(
         option: u32,
         value: *mut u32,
         length: u32,
-    ) -> u32,
-    lib = XAM,
-    ordinal = 0x0D7
+    ) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Processes pending HTTP work for a session.
-    pub NetDll_XHttpDoWork(caller: XnCaller, session: u32, timeout: u32) -> u32,
-    lib = XAM,
-    ordinal = 0x0D8
+    pub NetDll_XHttpDoWork(caller: XnCaller, session: u32, timeout: u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Starts the UPnP client.
-    pub NetDll_UpnpStartup(caller: XnCaller) -> i32,
-    lib = XAM,
-    ordinal = 0x0FB
+    pub NetDll_UpnpStartup(caller: XnCaller) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Stops the UPnP client.
-    pub NetDll_UpnpCleanup(caller: XnCaller) -> i32,
-    lib = XAM,
-    ordinal = 0x0FC
+    pub NetDll_UpnpCleanup(caller: XnCaller) -> i32
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the Xbox LIVE logon status and extended status.
-    pub XNetLogonGetExtendedStatus(status: *mut u32, extended: *mut u32) -> u32,
-    lib = XAM,
-    ordinal = 0x13B
+    pub XNetLogonGetExtendedStatus(status: *mut u32, extended: *mut u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Discards the cached Xbox LIVE tickets. The 2.0.6717 dashboard passes 0; the meaning of
     /// the argument is unknown.
-    pub XNetLogonClearTicketCaches(unknown: u32) -> u32,
-    lib = XAM,
-    ordinal = 0x13C
+    pub XNetLogonClearTicketCaches(unknown: u32) -> u32
 );
-crate::import_thunk!(
+import!(
     /// Stores a NUL-terminated Xbox LIVE service DNS name in `buffer`.
-    pub XNetLogonGetDnsString(index: u32, buffer: *mut u8, capacity: u32) -> u32,
-    lib = XAM,
-    ordinal = 0x1C6
+    pub XNetLogonGetDnsString(index: u32, buffer: *mut u8, capacity: u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Reads the capabilities of the controller of a user slot.
     /// Returns a Win32 error code: `ERROR_DEVICE_NOT_CONNECTED` without a controller.
     pub XamInputGetCapabilities(
         user_index: UserIndex,
         flags: InputFlags,
         capabilities: *mut Capabilities,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x190
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Reads the state of the controller of a user slot.
     /// Returns a Win32 error code: `ERROR_DEVICE_NOT_CONNECTED` without a controller.
     pub XamInputGetState(
         user_index: UserIndex,
         flags: InputFlags,
         state: *mut InputState,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x191
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Sets the motor speeds of the controller of a user slot. Xenia ignores `flags`.
     /// Returns a Win32 error code.
     pub XamInputSetState(
         user_index: UserIndex,
         flags: u32,
         vibration: *const Vibration,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x192
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Takes the next queued key transition. `user_index` selects the user
     /// slot, or with [`KeystrokeQuery::ANY_USER`] receives the slot of the
     /// keystroke. Returns a Win32 error code; nonzero when no keystroke is queued.
@@ -704,130 +586,98 @@ crate::import_thunk!(
         user_index: *mut u32,
         flags: KeystrokeQuery,
         keystroke: *mut Keystroke,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x198
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Applies the configured inactivity timeout.
-    pub XamSetInactivityTimeFromConfig(apply: u32) -> u32,
-    lib = XAM,
-    ordinal = 0x1A2
+    pub XamSetInactivityTimeFromConfig(apply: u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Writes the media type of the disc in the console drive to `media` and its title id to
     /// `title`. The 2.0.6717 dashboard reads media 1 as an Xbox 360 game and -1 as unknown.
-    pub XamLoaderGetMediaInfo(media: *mut u32, title: *mut u32) -> (),
-    lib = XAM,
-    ordinal = 0x1A3
+    pub XamLoaderGetMediaInfo(media: *mut u32, title: *mut u32) -> ()
 );
 
-crate::import_thunk!(
+import!(
     /// Ends the running title and launches the executable at `path` (null or a NUL-terminated path) with `flags`.
     /// A null `path` returns to the dashboard.
     /// Call it only from a thread of the title process: XAM then ends the title and the calling thread with it.
-    pub XamLoaderLaunchTitle(path: *const u8, flags: u32) -> !,
-    lib = XAM,
-    ordinal = 0x1A4
+    pub XamLoaderLaunchTitle(path: *const u8, flags: u32) -> !
 );
 
-crate::import_thunk!(
+import!(
     /// Launches the executable at `path` with `flags`, as [`XamLoaderLaunchTitle`] does. The
     /// purpose of `second` and `third` (NUL-terminated strings or null) is not known; the 2.0.6717
     /// dashboard passes null for all three strings to launch the disc.
-    pub XamLoaderLaunchTitleEx(path: *const u8, second: *const u8, third: *const u8, flags: u32) -> (),
-    lib = XAM,
-    ordinal = 0x1A5
+    pub XamLoaderLaunchTitleEx(path: *const u8, second: *const u8, third: *const u8, flags: u32) -> ()
 );
 
-crate::import_thunk!(
+import!(
     /// Sets the launch data the next title reads with `XamLoaderGetLaunchData`. Returns a Win32
     /// error code.
-    pub XamLoaderSetLaunchData(data: *const u8, size: u32) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x1A6
+    pub XamLoaderSetLaunchData(data: *const u8, size: u32) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Copies the launch data the previous title set to `buffer`, at most `size` bytes.
     /// Returns a Win32 error code; nonzero when no launch data is set.
-    pub XamLoaderGetLaunchData(buffer: *mut u8, size: u32) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x1A8
+    pub XamLoaderGetLaunchData(buffer: *mut u8, size: u32) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Ends the running title.
     /// Call it only from a thread of the title process: XAM then ends the title and the calling thread with it.
-    pub XamLoaderTerminateTitle() -> !,
-    lib = XAM,
-    ordinal = 0x1A9
+    pub XamLoaderTerminateTitle() -> !
 );
 
-crate::import_thunk!(
+import!(
     /// Returns the optical drive tray state.
-    pub safe XamLoaderGetDvdTrayState() -> u32,
-    lib = XAM,
-    ordinal = 0x1AA
+    pub safe XamLoaderGetDvdTrayState() -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Returns 1 when `title` is a system title id.
-    pub safe XamIsSystemTitleId(title: u32) -> Boolean,
-    lib = XAM,
-    ordinal = 0x1BB
+    pub safe XamIsSystemTitleId(title: u32) -> Boolean
 );
 
-crate::import_thunk!(
+import!(
     /// Returns the title id of the title that ran before the current one, or 0.
-    pub safe XamLoaderGetPriorTitleId() -> u32,
-    lib = XAM,
-    ordinal = 0x1BE
+    pub safe XamLoaderGetPriorTitleId() -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Writes the NUL-terminated path of the Windows Connect Now configuration file found on a
     /// storage device to `path`, at most `capacity` bytes. Returns `ERROR_FILE_NOT_FOUND` when
     /// no device holds one, or another Win32 error code.
-    pub XamGetWCNConfigFile(path: *mut u8, capacity: u32) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x1C6
+    pub XamGetWCNConfigFile(path: *mut u8, capacity: u32) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Mutes (nonzero) or unmutes the sounds of the system UI.
-    pub XamMuteSound(mute: u32) -> (),
-    lib = XAM,
-    ordinal = 0x1CA
+    pub XamMuteSound(mute: u32) -> ()
 );
 
-crate::import_thunk!(
+import!(
     /// Sets the dashboard context XAM reports to the system UI. The 2.0.6717 dashboard passes 3
     /// when initial setup starts and 0 when it completes.
-    pub XamSetDashContext(context: u32) -> (),
-    lib = XAM,
-    ordinal = 0x1CC
+    pub XamSetDashContext(context: u32) -> ()
 );
 
-crate::import_thunk!(
+import!(
     /// Calls a XAM application in the calling process. The meaning of the parameters depends
     /// on `message`.
-    pub XMsgInProcessCall(app: u32, message: u32, parameter1: *mut u32, parameter2: *mut u32) -> Hresult,
-    lib = XAM,
-    ordinal = 0x1F4
+    pub XMsgInProcessCall(app: u32, message: u32, parameter1: *mut u32, parameter2: *mut u32) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Calls a XAM application synchronously. The dashboard reports a language change with app 0xFE,
     /// message 0x8000000D and no buffer.
-    pub XMsgSystemProcessCall(app: u32, message: u32, buffer: *mut u8, buffer_length: u32) -> Hresult,
-    lib = XAM,
-    ordinal = 0x1F6
+    pub XMsgSystemProcessCall(app: u32, message: u32, buffer: *mut u8, buffer_length: u32) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Starts an I/O request to a XAM application. Completes through `overlapped` when not null.
     ///
     /// With `overlapped`, the result is the Win32 code `ERROR_IO_PENDING`
@@ -840,20 +690,16 @@ crate::import_thunk!(
         overlapped: *mut Overlapped,
         buffer: *mut u8,
         buffer_length: u32,
-    ) -> Hresult,
-    lib = XAM,
-    ordinal = 0x1F7
+    ) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Cancels the request of `overlapped`. With `wait`, returns after the request completed.
     /// The 2.0.6717 dashboard always waits and does not use the result.
-    pub XMsgCancelIORequest(overlapped: *mut Overlapped, wait: bool) -> u32,
-    lib = XAM,
-    ordinal = 0x1F8
+    pub XMsgCancelIORequest(overlapped: *mut Overlapped, wait: bool) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Starts an I/O request to a XAM application with an extra parameter block. The 2.0.6717
     /// dashboard queries a video license with app 0xFA, message 0x7005D, a 16-byte request and
     /// `extended` pointing to the words 0x20080002 and 0. Without `overlapped` the call completes
@@ -865,102 +711,73 @@ crate::import_thunk!(
         buffer: *mut u8,
         buffer_length: u32,
         extended: *mut u32,
-    ) -> Hresult,
-    lib = XAM,
-    ordinal = 0x1FC
+    ) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Returns the Win32 result of the request of `overlapped`, or `ERROR_IO_INCOMPLETE` while
     /// it runs and `wait` is false. Stores the result length at `length` when not null.
-    pub XamGetOverlappedResult(overlapped: *mut Overlapped, length: *mut u32, wait: bool) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x1FB
+    pub XamGetOverlappedResult(overlapped: *mut Overlapped, length: *mut u32, wait: bool) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the XUID of a user slot at `xuid`. `flags` selects the XUID kinds accepted
     /// (the 2.0.6717 dashboard passes 1, 3, 4 and 7). Fails when the slot has no such XUID.
-    pub XamUserGetXUID(user_index: UserIndex, flags: u32, xuid: *mut u64) -> Hresult,
-    lib = XAM,
-    ordinal = 0x20A
+    pub XamUserGetXUID(user_index: UserIndex, flags: u32, xuid: *mut u64) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Signs in the users of the four XUIDs at `xuids`, one per user slot; zero XUIDs sign
     /// those slots out. XAM copies the XUIDs during the call. Returns `ERROR_IO_PENDING` (a
     /// success value as an HRESULT) with an `overlapped`.
-    pub XamUserLogon(xuids: *const u64, flags: LogonFlags, overlapped: *mut Overlapped) -> Hresult,
-    lib = XAM,
-    ordinal = 0x20B
+    pub XamUserLogon(xuids: *const u64, flags: LogonFlags, overlapped: *mut Overlapped) -> Hresult
 );
 
-import_adapter!(
+import!(
     /// Stores at `user_index` the user slot the profile `xuid` is signed in on. `flags`
     /// selects the XUID kinds compared, as for [`XamUserGetXUID`]; the 2.0.6717 dashboard's
     /// Memory area passes 1. Fails when no slot has the profile. The export takes the 64-bit
     /// `xuid` in one register.
-    pub XamUserGetIndexFromXUID(xuid: u64, flags: u32, user_index: *mut u32) -> Hresult,
-    lib = XAM,
-    ordinal = 0x211,
-    // xuid in r3:r4, flags in r5, user_index in r6.
-    prologue = [
-        "rldimi 4, 3, 32, 0",
-        "mr 3, 4",
-        "mr 4, 5",
-        "mr 5, 6",
-    ]
+    pub XamUserGetIndexFromXUID(xuid: u64, flags: u32, user_index: *mut u32) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Unloads the system application `app`. The 2.0.6717 dashboard passes app 0xF6 with
     /// `unknown` 1 before a format, before it deletes the package named `IptvClient`, and in
     /// the IPTV client download (0x9228B9A0); the meaning of `unknown` is not known and the
     /// result is not read.
-    pub XamUnloadSysApp(app: u32, unknown: u32) -> u32,
-    lib = XAM,
-    ordinal = 0x252
+    pub XamUnloadSysApp(app: u32, unknown: u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Writes the gamertag of a signed-in user slot to `buffer` as NUL-terminated UTF-16,
     /// at most `length` units. The 2.0.6717 dashboard passes 16 units.
-    pub XamUserGetGamerTag(user_index: UserIndex, buffer: *mut u16, length: u32) -> Hresult,
-    lib = XAM,
-    ordinal = 0x20C
+    pub XamUserGetGamerTag(user_index: UserIndex, buffer: *mut u16, length: u32) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Returns the sign-in state of a user slot.
-    pub safe XamUserGetSigninState(user_index: UserIndex) -> SigninState,
-    lib = XAM,
-    ordinal = 0x210
+    pub safe XamUserGetSigninState(user_index: UserIndex) -> SigninState
 );
 
-crate::import_thunk!(
+import!(
     /// Processes the queued Xbox LIVE logons. Returns `ERROR_IO_PENDING` (a success value as an
     /// HRESULT) with an `overlapped`.
-    pub XamUserFlushLogonQueue(overlapped: *mut Overlapped) -> Hresult,
-    lib = XAM,
-    ordinal = 0x220
+    pub XamUserFlushLogonQueue(overlapped: *mut Overlapped) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Returns nonzero when the profile of a user slot has an Xbox LIVE account.
-    pub safe XamUserIsOnlineEnabled(user_index: UserIndex) -> Boolean,
-    lib = XAM,
-    ordinal = 0x221
+    pub safe XamUserIsOnlineEnabled(user_index: UserIndex) -> Boolean
 );
 
-crate::import_thunk!(
+import!(
     /// Opens an enumeration of the profiles on `device` (0 for all devices) and stores its handle.
     /// Close the handle with `NtClose`. Returns a Win32 error code.
-    pub XamProfileCreateEnumerator(device: u32, handle: *mut Handle) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x231
+    pub XamProfileCreateEnumerator(device: u32, handle: *mut Handle) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Starts the creation of an offline profile on the device `device_id` points to and stores
     /// the creation handle. `account` is a zeroed 0x17C-byte `XAMACCOUNTINFO` with the
     /// big-endian UTF-16 gamertag (16 units) at +8; `block` is a zeroed 0x8F0-byte block. The
@@ -975,12 +792,10 @@ crate::import_thunk!(
         reserved1: u32,
         reserved2: u32,
         handle: *mut Handle,
-    ) -> Hresult,
-    lib = XAM,
-    ordinal = 0x230
+    ) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the next profile of an enumeration at `result`. Returns a Win32 error code;
     /// nonzero once no profile remains.
     pub XamProfileEnumerate(
@@ -988,82 +803,49 @@ crate::import_thunk!(
         flags: u32,
         result: *mut ProfileEnumResult,
         overlapped: *mut Overlapped,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x232
+    ) -> Win32ErrorCode
 );
 
-import_adapter!(
+import!(
     /// Deletes the profile `xuid`. The 2.0.6717 dashboard passes 0 for
     /// `unknown`, whose meaning is not known, and calls it without an overlapped block.
     /// Returns an HRESULT. The export takes the 64-bit `xuid` in one register.
-    pub XamProfileDelete(unknown: u32, xuid: u64) -> Hresult,
-    lib = XAM,
-    ordinal = 0x233,
-    // unknown in r3, xuid in r5:r6.
-    prologue = [
-        "rldimi 6, 5, 32, 0",
-        "mr 4, 6",
-    ]
+    pub XamProfileDelete(unknown: u32, xuid: u64) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the XUID of the profile a `XamProfileCreate` handle creates. Returns
     /// `E_PENDING` while the creation runs.
-    pub XamProfileGetCreationStatus(handle: Handle, xuid: *mut u64) -> Hresult,
-    lib = XAM,
-    ordinal = 0x234
+    pub XamProfileGetCreationStatus(handle: Handle, xuid: *mut u64) -> Hresult
 );
 
-import_adapter!(
+import!(
     /// Mounts the dashboard settings of the profile `xuid` as the drive `mount_name`
     /// (NUL-terminated ASCII, such as `DASHUSER`). The 2.0.6717 dashboard passes 0 and null
     /// for `flags` and `content_data`. Returns a Win32 error code.
     /// The export takes the 64-bit `xuid` in one register.
-    pub XamProfileOpen(xuid: u64, mount_name: *const u8, flags: u32, content_data: *mut u8) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x237,
-    // xuid in r3:r4, mount_name in r5, flags in r6, content_data in r7.
-    prologue = [
-        "rldimi 4, 3, 32, 0",
-        "mr 3, 4",
-        "mr 4, 5",
-        "mr 5, 6",
-        "mr 6, 7",
-    ]
+    pub XamProfileOpen(xuid: u64, mount_name: *const u8, flags: u32, content_data: *mut u8) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Unmounts a drive that [`XamProfileOpen`] mounted. Returns a Win32 error code.
-    pub XamProfileClose(mount_name: *const u8) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x238
+    pub XamProfileClose(mount_name: *const u8) -> Win32ErrorCode
 );
 
-import_adapter!(
+import!(
     /// Reads the 0x17C-byte account record of the profile `xuid` from its package on
     /// `device_id` into `account`; the gamertag is NUL-terminated UTF-16 at +0x08. Returns an
     /// HRESULT. The export takes the 64-bit `xuid` in one register.
-    pub XamProfileLoadAccountInfo(device_id: u32, xuid: u64, account: *mut u8) -> Hresult,
-    lib = XAM,
-    ordinal = 0x23A,
-    // device_id in r3, xuid in r5:r6, account in r7.
-    prologue = [
-        "rldimi 6, 5, 32, 0",
-        "mr 4, 6",
-        "mr 5, 7",
-    ]
+    pub XamProfileLoadAccountInfo(device_id: u32, xuid: u64, account: *mut u8) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Unloads the XAM applications stacked above the dashboard. The 2.0.6717 dashboard passes
     /// 0 for `flags`; the result is not used.
-    pub XamAppUnloadStack(flags: u32) -> u32,
-    lib = XAM,
-    ordinal = 0x246
+    pub XamAppUnloadStack(flags: u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Creates or opens a content package and maps it to the drive `root_name`.
     /// The disposition taken is stored at `disposition_out` when not null.
     /// Returns a Win32 error code, or `ERROR_IO_PENDING` with an `overlapped`.
@@ -1075,31 +857,25 @@ crate::import_thunk!(
         disposition_out: *mut Disposition,
         license_mask_out: *mut u32,
         overlapped: *mut Overlapped,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x258
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Closes the content drive `root_name`. Returns a Win32 error code, or `ERROR_IO_PENDING` with an `overlapped`.
-    pub XamContentClose(root_name: *const u8, overlapped: *mut Overlapped) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x25A
+    pub XamContentClose(root_name: *const u8, overlapped: *mut Overlapped) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Deletes a content package.
     /// Returns a Win32 error code, or `ERROR_IO_PENDING` with an `overlapped`.
     pub XamContentDelete(
         user_index: UserIndex,
         content_data: *const ContentData,
         overlapped: *mut Overlapped,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x25B
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Creates an enumerator of the storage devices accepting
     /// `content_types`, returning `items_per_call` 0x50-byte device records
     /// per [`XamEnumerate`]. Returns a Win32 error code.
@@ -1109,28 +885,22 @@ crate::import_thunk!(
         items_per_call: u32,
         buffer_size_out: *mut u32,
         enumerator_out: *mut Handle,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x25D
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Fills the 0x50-byte device record of `device_id`. Returns a Win32
     /// error code.
-    pub XamContentGetDeviceData(device_id: u32, device_data: *mut u8) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x25E
+    pub XamContentGetDeviceData(device_id: u32, device_data: *mut u8) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Commits the writes to the content drive `root_name`. The 2.0.6717 dashboard flushes
     /// `DASHUSER` after it writes `DashPreferences`. Returns a Win32 error code.
-    pub XamContentFlush(root_name: *const u8, overlapped: *mut Overlapped) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x267
+    pub XamContentFlush(root_name: *const u8, overlapped: *mut Overlapped) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Copies the package of the 0x200-byte aggregate record `content` to the device `device`
     /// points to, owned by the XUID `new_owner` points to. The 2.0.6717 dashboard passes null
     /// for `device` when the destination is the package's device and null for `new_owner`
@@ -1148,12 +918,10 @@ crate::import_thunk!(
         context: *mut u8,
         unknown: u32,
         overlapped: *mut Overlapped,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x26C
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Moves a package; the arguments are those of [`XamContentCopyInternal`].
     pub XamContentMoveInternal(
         new_owner: *const u64,
@@ -1163,28 +931,22 @@ crate::import_thunk!(
         context: *mut u8,
         unknown: u32,
         overlapped: *mut Overlapped,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x26D
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Reads the header of the package of the 0x200-byte aggregate record `content` into
     /// `buffer`, 0x93D6 bytes in the 2.0.6717 dashboard. Returns a Win32 error code.
-    pub XamContentGetMetaDataInternal(content: *const u8, buffer: *mut u8, overlapped: *mut Overlapped) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x26E
+    pub XamContentGetMetaDataInternal(content: *const u8, buffer: *mut u8, overlapped: *mut Overlapped) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Deletes the package of the 0x200-byte aggregate record `content`. Returns a Win32 error
     /// code, or `ERROR_IO_PENDING` with an `overlapped`.
-    pub XamContentDeleteInternal(content: *const u8, overlapped: *mut Overlapped) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x270
+    pub XamContentDeleteInternal(content: *const u8, overlapped: *mut Overlapped) -> Win32ErrorCode
 );
 
-import_adapter_stack!(
+import!(
     /// Opens the package of the 0x200-byte aggregate record `content` and maps it to the drive
     /// `root_name`, as [`XamContentCreate`]. The 2.0.6717 dashboard opens existing packages
     /// (`flags` 3) and passes 0 for `reserved` and `size`. Returns a Win32 error code.
@@ -1198,26 +960,16 @@ import_adapter_stack!(
         reserved: u32,
         size: u64,
         overlapped: *mut Overlapped,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x271,
-    // root_name..reserved in r3-r8; size in r9:r10; overlapped at 0x78(1).
-    prologue = [
-        "rldimi 10, 9, 32, 0",
-        "mr 9, 10",
-        "lwz 10, 0x78(1)",
-    ]
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Launches the NUL-terminated executable path `image` inside the package of the 0x200-byte
     /// aggregate record `content`. Returns 0 on success; the system then ends the caller.
-    pub XamContentLaunchImageInternal(content: *const u8, image: *const u8) -> u32,
-    lib = XAM,
-    ordinal = 0x273
+    pub XamContentLaunchImageInternal(content: *const u8, image: *const u8) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Writes the path of the package of the 0x200-byte aggregate record `content` to `path` as a
     /// NUL-terminated string of at most `capacity` bytes. The 2.0.6717 dashboard passes 0x104
     /// and 0 for the reserved arguments. Returns a Win32 error code.
@@ -1228,12 +980,10 @@ crate::import_thunk!(
         reserved1: u32,
         reserved2: u32,
         reserved3: u32,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x276
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Writes the 0x24-byte attribute block of the package of the 0x200-byte aggregate record
     /// `content` to `attributes`; +0x4 holds the creation FILETIME. Returns a Win32 error code,
     /// or `ERROR_IO_PENDING` with an `overlapped`.
@@ -1241,77 +991,54 @@ crate::import_thunk!(
         content: *const u8,
         attributes: *mut u8,
         overlapped: *mut Overlapped,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x277
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Returns the system software version.
-    pub safe XamGetSystemVersion() -> u32,
-    lib = XAM,
-    ordinal = 0x282
+    pub safe XamGetSystemVersion() -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Takes the next queued notification of `listener` and stores its id and parameter.
     /// A nonzero `match_id` takes only notifications with that id.
     /// Returns nonzero when a notification was taken.
-    pub XNotifyGetNext(listener: Handle, match_id: u32, id: *mut u32, parameter: *mut u32) -> Boolean,
-    lib = XAM,
-    ordinal = 0x28B
+    pub XNotifyGetNext(listener: Handle, match_id: u32, id: *mut u32, parameter: *mut u32) -> Boolean
 );
 
-crate::import_thunk!(
+import!(
     /// Sends the notification `id` with `parameter` to every listener. The 2.0.6717 dashboard
     /// sends 0x8000000F with the bit of the user whose background changed and does not read the
     /// result, so none is declared.
-    pub safe XNotifyBroadcast(id: u32, parameter: u32) -> (),
-    lib = XAM,
-    ordinal = 0x28E
+    pub safe XNotifyBroadcast(id: u32, parameter: u32) -> ()
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the id of the default content device at `device`. Returns a Win32 error code,
     /// `ERROR_FUNCTION_FAILED` when no device is the default. The 2.0.6717 dashboard passes the
     /// device word of a 0x200-byte content record and does not read the result.
-    pub XamContentGetDefaultDevice(device: *mut u32) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x284
+    pub XamContentGetDefaultDevice(device: *mut u32) -> Win32ErrorCode
 );
 
-import_adapter!(
+import!(
     /// Creates a notification listener for the notification areas in `mask`. Returns the listener handle.
     /// The export takes the 64-bit `mask` in one register.
-    pub XamNotifyCreateListenerInternal(mask: u64, is_system: u32, max_version: u32) -> Handle,
-    lib = XAM,
-    ordinal = 0x291,
-    // mask in r3:r4, is_system in r5, max_version in r6.
-    prologue = [
-        "rldimi 4, 3, 32, 0",
-        "mr 3, 4",
-        "mr 4, 5",
-        "mr 5, 6",
-    ]
+    pub XamNotifyCreateListenerInternal(mask: u64, is_system: u32, max_version: u32) -> Handle
 );
 
-crate::import_thunk!(
+import!(
     /// Opens the sign-in UI with `panes` user panes. Returns a Win32 error code; the UI does
     /// not report when it closes.
-    pub XamShowSigninUI(panes: u32, flags: SigninFlags) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2BC
+    pub XamShowSigninUI(panes: u32, flags: SigninFlags) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// [`XamShowSigninUI`] for the controller `user_index`. Returns a Win32 error code; the UI
     /// does not report when it closes.
-    pub XamShowSigninUIp(user_index: UserIndex, panes: u32, flags: SigninFlags) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2BE
+    pub XamShowSigninUIp(user_index: UserIndex, panes: u32, flags: SigninFlags) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Shows the virtual keyboard. `default_text`, `title` and `description` are NUL-terminated
     /// UTF-16 strings. Completes through `overlapped` and writes the NUL-terminated text to
     /// `buffer`, at most `length` units. Returns `ERROR_IO_PENDING` when the keyboard is shown,
@@ -1325,28 +1052,22 @@ crate::import_thunk!(
         buffer: *mut u16,
         length: u32,
         overlapped: *mut Overlapped,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2C1
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Opens the gamer card of the profile signed in on `user_index`. Returns a Win32 error code.
     /// An index above 3 reaches `RtlRip`.
-    pub XamShowGamerCardUI(user_index: UserIndex) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2C4
+    pub XamShowGamerCardUI(user_index: UserIndex) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Opens the achievements of `title` for `user_index`. Returns a Win32 error code. An index
     /// above 3 reaches `RtlRip`.
-    pub XamShowAchievementsUI(user_index: UserIndex, title: u32) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2C5
+    pub XamShowAchievementsUI(user_index: UserIndex, title: u32) -> Win32ErrorCode
 );
 
-crate::import_thunk_stack!(
+import!(
     /// Shows a message box with up to three buttons. `title`, `text` and each entry of `buttons` are NUL-terminated UTF-16 strings.
     /// Completes through `overlapped` and stores the result at `result_out`: an 8-byte `MESSAGEBOX_RESULT` whose first word is the chosen button index.
     /// Returns `ERROR_IO_PENDING` when the box is shown, or another Win32 error code.
@@ -1360,12 +1081,10 @@ crate::import_thunk_stack!(
         flags: MessageBoxFlags,
         result_out: *mut u32,
         overlapped: *mut Overlapped,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2CA
+    ) -> Win32ErrorCode
 );
 
-import_adapter!(
+import!(
     /// Shows the storage device selector for content of type `content_type` (0 for any) that
     /// needs `bytes_requested` free bytes (0 for any). `device` holds the device selected
     /// first and receives the chosen device id. Completes through `overlapped`. Returns
@@ -1378,81 +1097,53 @@ import_adapter!(
         bytes_requested: u64,
         device: *mut u32,
         overlapped: *mut Overlapped,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2CB,
-    // user_index in r3, content_type in r4, flags in r5, bytes_requested in r7:r8, device in
-    // r9, overlapped in r10.
-    prologue = [
-        "rldimi 8, 7, 32, 0",
-        "mr 6, 8",
-        "mr 7, 9",
-        "mr 8, 10",
-    ]
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Opens the profile creation UI for `user_index`. In system software 2.0.21256.0 the export
     /// passes `unknown` on to `XamShowCreateProfileUIEx`, which stores it in the request and
     /// selects one of two modes by it (1, 0xB and 0xE against any other value); the 2.0.6717.0
     /// export takes only `user_index` and stores 0 there. Returns a Win32 error code. An index
     /// above 3 reaches `RtlRip`.
-    pub XamShowCreateProfileUI(user_index: UserIndex, unknown: u32) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2CF
+    pub XamShowCreateProfileUI(user_index: UserIndex, unknown: u32) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Opens the played games list of `user_index`. The 2.0.6717 dashboard passes 0 for
     /// `unknown`. Returns a Win32 error code. An index above 3 reaches `RtlRip`.
-    pub XamShowGamesUI(user_index: UserIndex, unknown: u32) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2D0
+    pub XamShowGamesUI(user_index: UserIndex, unknown: u32) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Opens the Xbox LIVE signup UI for `user_index`. The 2.0.6717 dashboard passes 1 to
     /// recover an existing account and 0 to join. Returns a Win32 error code.
-    pub XamShowLiveSignupUI(user_index: UserIndex, mode: u32) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2D1
+    pub XamShowLiveSignupUI(user_index: UserIndex, mode: u32) -> Win32ErrorCode
 );
 
-import_adapter!(
+import!(
     /// Opens the gamer card of `xuid` for `user_index`. A nonzero `flags` sets bit 0x80 of the
     /// request; the 2.0.6717 dashboard passes 0. Returns a Win32 error code. An index above 3
     /// reaches `RtlRip`. The export takes the 64-bit `xuid` in one register.
-    pub XamShowGamerCardUIForXUID(user_index: UserIndex, xuid: u64, flags: u32) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2D5,
-    // user_index in r3, xuid in r5:r6, flags in r7.
-    prologue = [
-        "rldimi 6, 5, 32, 0",
-        "mr 4, 6",
-        "mr 5, 7",
-    ]
+    pub XamShowGamerCardUIForXUID(user_index: UserIndex, xuid: u64, flags: u32) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Opens the details of `achievement` of `title` for `user_index`. Returns a Win32 error
     /// code. An index above 3 reaches `RtlRip`.
-    pub XamShowAchievementDetailsUI(user_index: UserIndex, title: u32, achievement: u32) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2E0
+    pub XamShowAchievementDetailsUI(user_index: UserIndex, title: u32, achievement: u32) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// In system software 2.0.6717.0 opens the theme picker for `user_index`, copying 0x200 bytes
     /// from `initial_selection` when it is not null. In 2.0.21256.0 it opens no UI: it writes
     /// 0x144 bytes of the selection to `<drive>:\ThematicSkin` and sends notification
     /// 0x8000000F, and a null `initial_selection` reaches `RtlRip`. The purpose of `unknown` is
     /// not known.
-    pub XamShowPersonalizationUI(user_index: UserIndex, initial_selection: *const u8, unknown: u32) -> u32,
-    lib = XAM,
-    ordinal = 0x2E1
+    pub XamShowPersonalizationUI(user_index: UserIndex, initial_selection: *const u8, unknown: u32) -> u32
 );
 
-import_adapter!(
+import!(
     /// Opens the marketplace at `entry` for `user_index`, with the offer `offer` and the title
     /// `title`. The 2.0.6717 dashboard passes 0xFFFFFFFF, 0xFFFFFFFF, 0 and 0 for the four
     /// unknown arguments. Returns a Win32 error code. The export takes the 64-bit `offer` in one
@@ -1466,37 +1157,20 @@ import_adapter!(
         unknown3: u32,
         unknown4: u32,
         title: u32,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2E8,
-    // user_index in r3, entry in r4, offer in r5:r6, the unknown words in r7 to r10, title in
-    // the first stack argument word at 8(1).
-    prologue = [
-        "rldimi 6, 5, 32, 0",
-        "mr 5, 6",
-        "mr 6, 7",
-        "mr 7, 8",
-        "mr 8, 9",
-        "mr 9, 10",
-        "lwz 10, 8(1)",
-    ]
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Returns nonzero when the running system UI was opened by a title.
-    pub safe XamIsSysUiInvokedByTitle() -> u32,
-    lib = XAM,
-    ordinal = 0x2EB
+    pub safe XamIsSysUiInvokedByTitle() -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Returns nonzero while a system UI is shown.
-    pub safe XamIsUIActive() -> Boolean,
-    lib = XAM,
-    ordinal = 0x2EC
+    pub safe XamIsUIActive() -> Boolean
 );
 
-crate::import_thunk!(
+import!(
     /// Writes the gamer picture of `title` with the key words `key_high` and `key_low` to the
     /// profile signed in on `user_index`. The 2.0.6717 dashboard passes 0 for `reserved`.
     /// Returns a Win32 error code, `ERROR_IO_PENDING` with an `overlapped`.
@@ -1507,172 +1181,123 @@ crate::import_thunk!(
         key_low: u32,
         reserved: u32,
         overlapped: *mut Overlapped,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2F0
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Opens the Xbox LIVE upsell UI for `user_index`. `XamShowLiveUpsellUI` (0x2D7) takes no
     /// arguments and calls this export with 0. Returns a Win32 error code.
-    pub XamShowLiveUpsellUIEx(user_index: UserIndex) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x300
+    pub XamShowLiveUpsellUIEx(user_index: UserIndex) -> Win32ErrorCode
 );
 
-import_adapter!(
+import!(
     /// Opens the join session in progress UI for the player `xuid` for `user_index`. Returns a
     /// Win32 error code. An index above 3 reaches `RtlRip`. The export takes the 64-bit `xuid`
     /// in one register.
-    pub XamShowJoinSessionInProgressUI(user_index: UserIndex, xuid: u64) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x301,
-    // user_index in r3, xuid in r5:r6.
-    prologue = [
-        "rldimi 6, 5, 32, 0",
-        "mr 4, 6",
-    ]
+    pub XamShowJoinSessionInProgressUI(user_index: UserIndex, xuid: u64) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Writes the locator of the system resource `name` to `locator`, at most `capacity` UTF-16 units: `section://<xam.xex module handle>,shrdres#<name>`, or a `memory://` locator for eight legacy names. In system software 2.0.21256.0 it asserts (`twi 31`) unless the running title is one of two system titles, which halts other titles under the debug monitor.
-    pub XamBuildLegacySystemResourceLocator(name: *const u16, locator: *mut u16, capacity: u32) -> Hresult,
-    lib = XAM,
-    ordinal = 0x31C
+    pub XamBuildLegacySystemResourceLocator(name: *const u16, locator: *mut u16, capacity: u32) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Returns the audio flags (XConfig user setting 0xB).
-    pub safe XGetAudioFlags() -> u32,
-    lib = XAM,
-    ordinal = 0x3CA
+    pub safe XGetAudioFlags() -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Returns the AV pack value.
-    pub safe XGetAVPack() -> u32,
-    lib = XAM,
-    ordinal = 0x3CB
+    pub safe XGetAVPack() -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Returns the game region of the console (XConfig).
-    pub safe XGetGameRegion() -> u32,
-    lib = XAM,
-    ordinal = 0x3CC
+    pub safe XGetGameRegion() -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the current video mode.
-    pub XGetVideoMode(mode: *mut VideoMode) -> (),
-    lib = XAM,
-    ordinal = 0x3D1
+    pub XGetVideoMode(mode: *mut VideoMode) -> ()
 );
 
-crate::import_thunk!(
+import!(
     /// Returns the console language.
-    pub safe XamGetLanguage() -> u32,
-    lib = XAM,
-    ordinal = 0x3D2
+    pub safe XamGetLanguage() -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Binds an automation controller to a user slot.
-    pub XAutomationpBindController(user: UserIndex) -> u32,
-    lib = XAM,
-    ordinal = 0x3D5
+    pub XAutomationpBindController(user: UserIndex) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Removes the automation controller from a user slot.
-    pub XAutomationpUnbindController(user: UserIndex) -> u32,
-    lib = XAM,
-    ordinal = 0x3D6
+    pub XAutomationpUnbindController(user: UserIndex) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Sends a Guide button press from the automation controller of a user slot.
-    pub XAutomationpInputXenonButton(user: UserIndex) -> u32,
-    lib = XAM,
-    ordinal = 0x3D7
+    pub XAutomationpInputXenonButton(user: UserIndex) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Allocates from a heap. Returns the address or 0.
-    pub RtlAllocateHeap(heap: u32, flags: HeapFlags, size: u32) -> u32,
-    lib = XAM,
-    ordinal = 0x3FC
+    pub RtlAllocateHeap(heap: u32, flags: HeapFlags, size: u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Frees a heap block.
-    pub RtlFreeHeap(heap: u32, flags: HeapFlags, block: u32) -> u32,
-    lib = XAM,
-    ordinal = 0x3FF
+    pub RtlFreeHeap(heap: u32, flags: HeapFlags, block: u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Returns the ID of the current thread.
-    pub safe GetCurrentThreadId() -> u32,
-    lib = XAM,
-    ordinal = 0x410
+    pub safe GetCurrentThreadId() -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Waits on a handle for `milliseconds`, or without limit for [`INFINITE`].
-    pub WaitForSingleObject(handle: Handle, milliseconds: u32) -> WaitResult,
-    lib = XAM,
-    ordinal = 0x425
+    pub WaitForSingleObject(handle: Handle, milliseconds: u32) -> WaitResult
 );
 
-crate::import_thunk!(
+import!(
     /// Sets an event to not signaled.
-    pub ResetEvent(event: Handle) -> Boolean,
-    lib = XAM,
-    ordinal = 0x42B
+    pub ResetEvent(event: Handle) -> Boolean
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the performance counter.
-    pub QueryPerformanceCounter(counter: *mut u64) -> Boolean,
-    lib = XAM,
-    ordinal = 0x42F
+    pub QueryPerformanceCounter(counter: *mut u64) -> Boolean
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the performance counter frequency.
-    pub QueryPerformanceFrequency(frequency: *mut u64) -> Boolean,
-    lib = XAM,
-    ordinal = 0x430
+    pub QueryPerformanceFrequency(frequency: *mut u64) -> Boolean
 );
 
-crate::import_thunk!(
+import!(
     /// Decrements the suspend count of a thread. Returns the previous count.
-    pub ResumeThread(thread: Handle) -> u32,
-    lib = XAM,
-    ordinal = 0x43D
+    pub ResumeThread(thread: Handle) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the local time.
-    pub GetLocalTime(time: *mut SystemTime) -> (),
-    lib = XAM,
-    ordinal = 0x444
+    pub GetLocalTime(time: *mut SystemTime) -> ()
 );
 
-crate::import_thunk!(
+import!(
     /// Creates an event. Returns the handle or [`Handle::NULL`].
     pub CreateEventA(
         attributes: u32,
         manual_reset: bool,
         initial_state: bool,
         name: *const u8,
-    ) -> Handle,
-    lib = XAM,
-    ordinal = 0x446
+    ) -> Handle
 );
 
-crate::import_thunk!(
+import!(
     /// Creates or opens a file. `name` is the address of a NUL-terminated path. Returns the handle or [`INVALID_HANDLE_VALUE`].
     pub CreateFileA(
         name: u32,
@@ -1682,12 +1307,10 @@ crate::import_thunk!(
         disposition: CreationDisposition,
         flags: FileAttributes,
         template: Handle,
-    ) -> Handle,
-    lib = XAM,
-    ordinal = 0x447
+    ) -> Handle
 );
 
-crate::import_thunk!(
+import!(
     /// Duplicates a handle.
     pub DuplicateHandle(
         source_process: Handle,
@@ -1697,176 +1320,120 @@ crate::import_thunk!(
         access: AccessMask,
         inherit: bool,
         options: DuplicateOptions,
-    ) -> Boolean,
-    lib = XAM,
-    ordinal = 0x45B
+    ) -> Boolean
 );
 
-crate::import_thunk!(
+import!(
     /// Removes the IPTV service registration.
-    pub XamIptvUninstall() -> Hresult,
-    lib = XAM,
-    ordinal = 0x517
+    pub XamIptvUninstall() -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the DVR storage in megabytes: the space given to recordings, the space they
     /// use, and the largest allocation the service accepts.
-    pub XamGetDvrStorage(allocated: *mut u32, used: *mut u32, maximum: *mut u32) -> Hresult,
-    lib = XAM,
-    ordinal = 0x518
+    pub XamGetDvrStorage(allocated: *mut u32, used: *mut u32, maximum: *mut u32) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Sets the space given to recordings, in megabytes. Completes through `overlapped`;
     /// the 2.0.6717 dashboard treats a negative result as a failure.
-    pub XamSetDvrStorage(allocated: u32, overlapped: *mut Overlapped) -> Hresult,
-    lib = XAM,
-    ordinal = 0x519
+    pub XamSetDvrStorage(allocated: u32, overlapped: *mut Overlapped) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Stores a pointer to the NUL-terminated UTF-16 name of the IPTV service at `name`.
-    pub XamIptvGetServiceName(name: *mut *const u16) -> Hresult,
-    lib = XAM,
-    ordinal = 0x51A
+    pub XamIptvGetServiceName(name: *mut *const u16) -> Hresult
 );
 
-crate::import_thunk!(
+import!(
     /// Returns the default heap of the process.
-    pub safe GetProcessHeap() -> u32,
-    lib = XAM,
-    ordinal = 0x7D2
+    pub safe GetProcessHeap() -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Copies the background download queue of `user` to `items`, 0x250-byte records with the
     /// package path at +0x138. `count` holds the capacity in records on entry and the number
     /// copied on return. The 2.0.6717 dashboard passes a capacity of 6 and reads only `count`.
-    pub XamBackgroundDownloadGetItems(user_index: UserIndex, items: *mut u8, count: *mut u32) -> u32,
-    lib = XAM,
-    ordinal = 0x9C7
+    pub XamBackgroundDownloadGetItems(user_index: UserIndex, items: *mut u8, count: *mut u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Copies the play timer record to `data`. The 2.0.6717 dashboard does not read the result.
-    pub XamPlayTimerGetData(data: *mut PlayTimerData) -> (),
-    lib = XAM,
-    ordinal = 0xA5A
+    pub XamPlayTimerGetData(data: *mut PlayTimerData) -> ()
 );
 
-crate::import_thunk!(
+import!(
     /// Replaces the play timer record with `data`. The 2.0.6717 dashboard passes 1 for `save`
     /// and does not read the result.
-    pub XamPlayTimerSetData(data: *const PlayTimerData, save: u32) -> (),
-    lib = XAM,
-    ordinal = 0xA5B
+    pub XamPlayTimerSetData(data: *const PlayTimerData, save: u32) -> ()
 );
 
-crate::import_thunk!(
+import!(
     /// Resumes the play timer. The 2.0.6717 dashboard passes 1.
-    pub safe XamPlayTimerResume(resume: u32) -> (),
-    lib = XAM,
-    ordinal = 0xA5C
+    pub safe XamPlayTimerResume(resume: u32) -> ()
 );
 
-crate::import_thunk!(
+import!(
     /// Suspends the play timer.
-    pub safe XamPlayTimerSuspend() -> (),
-    lib = XAM,
-    ordinal = 0xA5D
+    pub safe XamPlayTimerSuspend() -> ()
 );
 
-crate::import_thunk!(
+import!(
     /// Whether the play timer is counting.
-    pub safe XamPlayTimerIsRunning() -> Boolean,
-    lib = XAM,
-    ordinal = 0xA5E
+    pub safe XamPlayTimerIsRunning() -> Boolean
 );
 
-crate::import_thunk!(
+import!(
     /// Whether a play timer period is set.
-    pub safe XamPlayTimerIsEnabled() -> Boolean,
-    lib = XAM,
-    ordinal = 0xA5F
+    pub safe XamPlayTimerIsEnabled() -> Boolean
 );
 
-crate::import_thunk!(
+import!(
     /// Writes the next reset of `period` to `data.next_reset`.
-    pub XamPlayTimerGetNextResetDate(period: u32, data: *mut PlayTimerData) -> (),
-    lib = XAM,
-    ordinal = 0xA60
+    pub XamPlayTimerGetNextResetDate(period: u32, data: *mut PlayTimerData) -> ()
 );
 
-crate::import_thunk!(
+import!(
     /// Posts the play timer notification.
-    pub safe XamPlayTimerForceNotification() -> (),
-    lib = XAM,
-    ordinal = 0xA64
+    pub safe XamPlayTimerForceNotification() -> ()
 );
 
-crate::import_thunk_u64!(
+import!(
     /// The security violations the system has detected, as a 64-bit value.
-    pub safe XamGetSecurityViolationsDetected() -> u64,
-    lib = XAM,
-    ordinal = 0xAF3
+    pub safe XamGetSecurityViolationsDetected() -> u64
 );
 
-crate::import_thunk!(
+import!(
     /// Gives the PNG of the default gamer picture: stores its address at `image` and its
     /// length at `size`. The 2.0.6717 dashboard does not read the result.
-    pub XamGetDefaultSystemImage(image: *mut *const u8, size: *mut u32) -> u32,
-    lib = XAM,
-    ordinal = 0x1C5
+    pub XamGetDefaultSystemImage(image: *mut *const u8, size: *mut u32) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Returns nonzero when `title` is an original Xbox title.
-    pub safe XamIsXbox1TitleId(title: u32) -> Boolean,
-    lib = XAM,
-    ordinal = 0x1BF
+    pub safe XamIsXbox1TitleId(title: u32) -> Boolean
 );
 
-crate::import_thunk!(
+import!(
     /// Returns the title id of the running title, 0 for none.
-    pub safe XamGetCurrentTitleId() -> u32,
-    lib = XAM,
-    ordinal = 0x1CF
+    pub safe XamGetCurrentTitleId() -> u32
 );
 
-import_adapter!(
+import!(
     /// Writes the time of the local `FILETIME` `time` for `user` as NUL-terminated UTF-16, at most
     /// `length` units. The 2.0.6717 dashboard does not read the result.
     /// The export takes `time` in one register.
-    pub XamFormatTimeString(user: u32, time: u64, buffer: *mut u16, length: u32) -> (),
-    lib = XAM,
-    ordinal = 0x1E7,
-    // user in r3, time in r5:r6, buffer in r7, length in r8.
-    prologue = [
-        "rldimi 6, 5, 32, 0",
-        "mr 4, 6",
-        "mr 5, 7",
-        "mr 6, 8",
-    ]
+    pub XamFormatTimeString(user: u32, time: u64, buffer: *mut u16, length: u32) -> ()
 );
 
-import_adapter!(
+import!(
     /// Writes the date of the local `FILETIME` `time` for `user` as NUL-terminated UTF-16, at most
     /// `length` units. The 2.0.6717 dashboard does not read the result.
     /// The export takes `time` in one register.
-    pub XamFormatDateString(user: u32, time: u64, buffer: *mut u16, length: u32) -> (),
-    lib = XAM,
-    ordinal = 0x1E8,
-    // user in r3, time in r5:r6, buffer in r7, length in r8.
-    prologue = [
-        "rldimi 6, 5, 32, 0",
-        "mr 4, 6",
-        "mr 5, 7",
-        "mr 6, 8",
-    ]
+    pub XamFormatDateString(user: u32, time: u64, buffer: *mut u16, length: u32) -> ()
 );
 
-crate::import_thunk_stack!(
+import!(
     /// Reads the profile settings `ids` (`count` entries) of `title` for `user`, or of the
     /// `xuid_count` profiles at `xuids`. Without `buffer`, stores the size needed at `size`.
     /// Returns a Win32 error code, or `ERROR_IO_PENDING` with an `overlapped`.
@@ -1880,19 +1447,15 @@ crate::import_thunk_stack!(
         size: *mut u32,
         buffer: *mut u8,
         overlapped: *mut Overlapped,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x219
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Returns the Xbox LIVE membership type of `user` in the low byte.
-    pub safe XamUserGetMembershipType(user: UserIndex) -> u32,
-    lib = XAM,
-    ordinal = 0x21B
+    pub safe XamUserGetMembershipType(user: UserIndex) -> u32
 );
 
-crate::import_thunk!(
+import!(
     /// Creates an enumeration handle served by XAM application `app`: `XamEnumerate` on it sends
     /// `enumerate_message`, closing it sends `close_message`. The handle carries a private block of
     /// `private_size` bytes for the application. The 2.0.6717 dashboard passes user -1 and
@@ -1906,22 +1469,18 @@ crate::import_thunk!(
         count: u32,
         flags: u32,
         handle: *mut Handle,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x24E
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Stores the object of the private block of an enumeration `handle` at `object`, with a
     /// reference the caller releases with `ObDereferenceObject`. The 2.0.6717 dashboard zeroes
     /// `private_size` bytes from the object's +0x18, passes that address in its start request and
     /// does not read the result, so none is declared.
-    pub XamGetPrivateEnumStructureFromHandle(handle: Handle, object: *mut *mut u8) -> (),
-    lib = XAM,
-    ordinal = 0x24F
+    pub XamGetPrivateEnumStructureFromHandle(handle: Handle, object: *mut *mut u8) -> ()
 );
 
-crate::import_thunk!(
+import!(
     /// Reads the next records of an enumeration into `buffer`. Stores the record count at
     /// `items` when not null. Returns a Win32 error code: `ERROR_NO_MORE_FILES` after the
     /// last record, or `ERROR_IO_PENDING` with an `overlapped`, which then holds the count
@@ -1933,12 +1492,10 @@ crate::import_thunk!(
         size: u32,
         items: *mut u32,
         overlapped: *mut Overlapped,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x250
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Opens an enumeration of the packages of `content_type` and `title` on `device` (0: every
     /// device). The 2.0.6717 dashboard passes 0 as the first argument; its Memory area passes a
     /// device id, other callers 0. Returns a Win32 error code.
@@ -1948,28 +1505,22 @@ crate::import_thunk!(
         content_type: u32,
         title: u32,
         handle: *mut Handle,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x279
+    ) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Writes the cached name of `title` as NUL-terminated UTF-16 to `buffer`, at most
     /// `*length` units. Returns a Win32 error code.
-    pub XamGetCachedTitleName(title: u32, buffer: *mut u16, length: *mut u32) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2B6
+    pub XamGetCachedTitleName(title: u32, buffer: *mut u16, length: *mut u32) -> Win32ErrorCode
 );
 
-crate::import_thunk!(
+import!(
     /// Clears XAM's content and title caches. The 2.0.6717 dashboard passes
     /// zero during storage maintenance and ignores the result.
-    pub XamCacheReset(flags: u32) -> u32,
-    lib = XAM,
-    ordinal = 0x2B7
+    pub XamCacheReset(flags: u32) -> u32
 );
 
-import_adapter!(
+import!(
     /// Opens an enumeration of the achievements of `title` for `user` or `xuid` (0 for the
     /// user). Stores the buffer size for `count` records at `size`. Returns a Win32 error code.
     /// The export takes `xuid` in one register.
@@ -1982,22 +1533,10 @@ import_adapter!(
         count: u32,
         size: *mut u32,
         handle: *mut Handle,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2EE,
-    // title, user in r3, r4; xuid in r5:r6; details..size in r7-r10; handle at 8(1).
-    prologue = [
-        "rldimi 6, 5, 32, 0",
-        "mr 5, 6",
-        "mr 6, 7",
-        "mr 7, 8",
-        "mr 8, 9",
-        "mr 9, 10",
-        "lwz 10, 8(1)",
-    ]
+    ) -> Win32ErrorCode
 );
 
-import_adapter!(
+import!(
     /// Reads a tile PNG into `buffer`. Without `buffer`, stores the size needed at `size`.
     /// Returns a Win32 error code, or `ERROR_IO_PENDING` with an `overlapped`.
     /// The export takes `tile` in one register.
@@ -2009,21 +1548,10 @@ import_adapter!(
         buffer: *mut u8,
         size: *mut u32,
         overlapped: *mut Overlapped,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2EF,
-    // tile_type, title in r3, r4; tile in r5:r6; the rest in r7-r10.
-    prologue = [
-        "rldimi 6, 5, 32, 0",
-        "mr 5, 6",
-        "mr 6, 7",
-        "mr 7, 8",
-        "mr 8, 9",
-        "mr 9, 10",
-    ]
+    ) -> Win32ErrorCode
 );
 
-import_adapter!(
+import!(
     /// Opens an enumeration of the titles `user` or `xuid` (0 for the user) has played.
     /// Stores the buffer size for `count` records at `size`. Returns a Win32 error code.
     /// The export takes `xuid` in one register.
@@ -2035,21 +1563,10 @@ import_adapter!(
         count: u32,
         size: *mut u32,
         handle: *mut Handle,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2F3,
-    // title, user in r3, r4; xuid in r5:r6; the rest in r7-r10.
-    prologue = [
-        "rldimi 6, 5, 32, 0",
-        "mr 5, 6",
-        "mr 6, 7",
-        "mr 7, 8",
-        "mr 8, 9",
-        "mr 9, 10",
-    ]
+    ) -> Win32ErrorCode
 );
 
-import_adapter_stack!(
+import!(
     /// Reads a tile PNG into `buffer` of `*size` bytes and stores the length at `size`.
     /// `key` is the picture key setting for tile type 0xC; the 2.0.6717 dashboard passes
     /// `has_key` 0 with it. Returns a Win32 error code, or `ERROR_IO_PENDING` with an
@@ -2064,22 +1581,5 @@ import_adapter_stack!(
         buffer: *mut u8,
         size: *mut u32,
         overlapped: *mut Overlapped,
-    ) -> Win32ErrorCode,
-    lib = XAM,
-    ordinal = 0x2FC,
-    // tile_type, title in r3, r4; tile in r5:r6; user..buffer in r7-r10; size and
-    // overlapped at 0x78(1) and 0x7c(1).
-    prologue = [
-        "rldimi 6, 5, 32, 0",
-        "mr 5, 6",
-        "mr 6, 7",
-        "mr 7, 8",
-        "mr 8, 9",
-        "mr 9, 10",
-        "lwz 10, 0x78(1)",
-        "li 12, 0",
-        "lwz 11, 0x7c(1)",
-        "stw 12, 0x50(1)",
-        "stw 11, 0x54(1)",
-    ]
+    ) -> Win32ErrorCode
 );

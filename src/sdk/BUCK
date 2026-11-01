@@ -1,0 +1,11 @@
+# The thunk library that tools/xbox360-bindgen generates from the Xbox 360
+# headers in include/, and that xbox360-sys assembles.
+filegroup(
+    name = "thunks",
+    srcs = {
+        "macros.inc": "thunks/macros.inc",
+        "ppc32.S": "thunks/ppc32.S",
+        "ppc64.S": "thunks/ppc64.S",
+    },
+    visibility = ["PUBLIC"],
+)
