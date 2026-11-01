@@ -61,7 +61,24 @@ and Xenia's XSocket::SendTo network byte order (committed in the xenia checkout)
 - [x] Console instruction costs, bandwidth and LLVM/SDK compiler comparison,
       with 2808 independently checked output cases; see `docs/vmx128-measurements.md`.
 
+## MSVC parity (PPC64 toolchain)
+
+Gaps that limit interop with code built by the console compiler. The C
+calling convention, `wchar_t` and `long double` already match; see
+`docs/llvm-xbox360-abi-evidence.md`.
+
+- [ ] Microsoft C++ ABI: name mangling, class layout, virtual tables,
+      member-function pointers, RTTI and C++ exceptions. Clang uses the
+      Itanium C++ ABI, so only `extern "C"` and C-compatible types interop.
+- [ ] `.pdata` unwind metadata, so SEH and kernel unwinding can walk LLVM
+      frames.
+- [ ] `cr2`-`cr4` volatility. LLVM preserves them; no console-compiled
+      callee has been seen preserving or clobbering them, so an LLVM caller
+      may wrongly keep values in them across a call into console code.
+- [ ] Bitfield layout and allocation order, checked against compiler probes.
+- [ ] Variadic aggregate arguments.
+
 ## Deferred
 
-- `.pdata` unwind, millicode helpers, LZX compression of the
-  XEX, retail encryption, real signing, exception handling/unwinding.
+- Millicode helpers, LZX compression of the XEX, retail encryption, real
+  signing, exception handling/unwinding.
