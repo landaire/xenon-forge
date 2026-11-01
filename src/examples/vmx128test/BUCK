@@ -7,7 +7,6 @@ xbox360_title(
     srcs = glob(["src/**/*.rs", "src/**/*.s"]),
     crate_root = "src/main.rs",
     edition = "2024",
-    link_script = "link.x",
     manifest = "xex.toml",
     std = True,
     rewrite = True,

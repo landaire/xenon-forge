@@ -10,6 +10,12 @@ use crate::resources::ResourceFile;
 
 pub const USAGE: &str = "\
 usage: xex-link <input.elf> <output.xex> [--manifest PATH] [--resource NAME=PATH]...
+       xex-link link-script <output.x> [--manifest PATH]
+
+The first form converts a linked ELF into a XEX. The second writes the GNU ld
+script that places the sections of a module for the manifest: code at the load
+address plus one page (the first page holds the headers), each kind of section
+on its own pages.
 
 options:
   --manifest PATH         TOML file of XEX metadata; every key is optional
@@ -39,6 +45,12 @@ manifest keys:
   min_version = \"VER\"     oldest compatible version recorded in the export
                           table (default \"2.0.1861.0\")";
 
+/// What to do.
+pub enum Command {
+    Link(Config),
+    LinkScript { output: String, manifest: Manifest },
+}
+
 pub struct Config {
     pub input: String,
     pub output: String,
@@ -46,15 +58,18 @@ pub struct Config {
     pub resources: Vec<ResourceFile>,
 }
 
-impl Config {
+impl Command {
     /// Parse the process arguments. `--help` prints usage and exits.
     pub fn from_args() -> Result<Self> {
-        let mut input = None;
-        let mut output = None;
+        let mut args = std::env::args().skip(1).peekable();
+        let script = args.peek().is_some_and(|arg| arg == "link-script");
+        if script {
+            args.next();
+        }
+
+        let mut paths = Vec::new();
         let mut manifest_path = None;
         let mut resources = Vec::new();
-
-        let mut args = std::env::args().skip(1);
         while let Some(arg) = args.next() {
             match arg.as_str() {
                 "--manifest" => {
@@ -63,7 +78,7 @@ impl Config {
                         .ok_or_else(|| XexLinkError::MissingValue(arg.clone()).into_report())?;
                     manifest_path = Some(path);
                 }
-                "--resource" => {
+                "--resource" if !script => {
                     let value = args
                         .next()
                         .ok_or_else(|| XexLinkError::MissingValue(arg.clone()).into_report())?;
@@ -76,15 +91,9 @@ impl Config {
                 _ if arg.starts_with('-') => {
                     return Err(XexLinkError::UnexpectedArg(arg).into_report());
                 }
-                _ if input.is_none() => input = Some(arg),
-                _ if output.is_none() => output = Some(arg),
-                _ => return Err(XexLinkError::UnexpectedArg(arg).into_report()),
+                _ => paths.push(arg),
             }
         }
-
-        let (Some(input), Some(output)) = (input, output) else {
-            return Err(XexLinkError::MissingPaths.into_report());
-        };
 
         let manifest = match manifest_path {
             Some(path) => {
@@ -95,11 +104,26 @@ impl Config {
             None => Manifest::default(),
         };
 
-        Ok(Self {
+        let expected = if script { 1 } else { 2 };
+        if let Some(extra) = paths.get(expected) {
+            return Err(XexLinkError::UnexpectedArg(extra.clone()).into_report());
+        }
+        let mut paths = paths.into_iter();
+        if script {
+            let Some(output) = paths.next() else {
+                return Err(XexLinkError::MissingPaths.into_report());
+            };
+            return Ok(Self::LinkScript { output, manifest });
+        }
+
+        let (Some(input), Some(output)) = (paths.next(), paths.next()) else {
+            return Err(XexLinkError::MissingPaths.into_report());
+        };
+        Ok(Self::Link(Config {
             input,
             output,
             manifest,
             resources,
-        })
+        }))
     }
 }

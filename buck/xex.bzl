@@ -179,6 +179,28 @@ def _xex_link(ctx: AnalysisContext, image: Artifact, checks: list[Artifact]) -> 
     ctx.actions.run(cmd, category = "xex_link")
     return xex
 
+def _generated_link_script(ctx: AnalysisContext, manifest: Artifact | None) -> Artifact:
+    """The GNU ld script that xex-link derives from `manifest`."""
+    script = ctx.actions.declare_output("link.x")
+    cmd = cmd_args(ctx.attrs._xex_link[RunInfo], "link-script", script.as_output())
+    if manifest:
+        cmd.add("--manifest", manifest)
+    ctx.actions.run(cmd, category = "link_script")
+    return script
+
+def _xex_link_script_impl(ctx: AnalysisContext) -> list[Provider]:
+    return [DefaultInfo(default_output = _generated_link_script(ctx, ctx.attrs.manifest))]
+
+# The GNU ld script of a module for its xex-link manifest: code one page
+# above the load address and each kind of section on its own pages.
+xex_link_script = rule(
+    impl = _xex_link_script_impl,
+    attrs = {
+        "manifest": attrs.option(attrs.source(), default = None),
+        "_xex_link": attrs.exec_dep(providers = [RunInfo], default = "xbox360//src/crates/xex-link:xex-link"),
+    },
+)
+
 def _debugger_files(
         ctx: AnalysisContext,
         xex: Artifact,
@@ -388,6 +410,7 @@ xbox360_c_library = rule(
 def _xbox360_c_title_impl(ctx: AnalysisContext) -> list[Provider]:
     includes, library_objects = _c_dependencies(ctx.attrs.deps)
     objects = [_compile(ctx, src, includes) for src in ctx.attrs.srcs] + library_objects
+    link_script = ctx.attrs.link_script or _generated_link_script(ctx, ctx.attrs.manifest)
 
     image = ctx.actions.declare_output("image")
     ctx.actions.run(
@@ -401,7 +424,7 @@ def _xbox360_c_title_impl(ctx: AnalysisContext) -> list[Provider]:
             # .init_array shares the data segment.
             "-z",
             "norelro",
-            cmd_args(ctx.attrs.link_script, format = "-T{}"),
+            cmd_args(link_script, format = "-T{}"),
             "--no-rosegment",
             "-o",
             image.as_output(),
@@ -421,8 +444,8 @@ def _xbox360_c_title_impl(ctx: AnalysisContext) -> list[Provider]:
 
 # A XEX from C and C++ sources. The configured clang compiles them for
 # big-endian PowerPC without a C or C++ library, and its linker links the
-# objects with --gc-sections and the GNU ld script `link_script`.
-# `compiler_flags` apply
+# objects with --gc-sections and the GNU ld script `link_script`, by
+# default the one xex-link derives from `manifest`. `compiler_flags` apply
 # to every source, `cxx_compiler_flags` only to C++ sources (.cc, .cpp,
 # .cxx). `deps` are
 # `xbox360_c_library` targets: a title lists `xbox360//src/sdk:crt`, which
@@ -433,7 +456,7 @@ xbox360_c_title = rule(
     impl = _xbox360_c_title_impl,
     attrs = _XEX_ATTRS | _C_ATTRS | {
         "deps": attrs.list(attrs.dep(providers = [Xbox360CLibraryInfo]), default = []),
-        "link_script": attrs.source(),
+        "link_script": attrs.option(attrs.source(), default = None),
     },
 )
 
@@ -796,7 +819,7 @@ _XEX_RULES = {
 
 def xbox360_title(
         name: str,
-        link_script: str,
+        link_script: str | None = None,
         manifest: str | None = None,
         resources: dict[str, str] | str | None = None,
         rust_project: str | None = None,
@@ -807,8 +830,9 @@ def xbox360_title(
         **kwargs):
     """Builds `name.xex` from a Rust executable.
 
-    `link_script` is the GNU ld script that places the sections; `manifest`
-    is the xex-link manifest with the title's XEX metadata. `resources`
+    `manifest` is the xex-link manifest with the title's XEX metadata.
+    `link_script` is the GNU ld script that places the sections; by default
+    xex-link derives it from the manifest. `resources`
     maps resource names (1 to 8 bytes) to the files, or targets, that the
     image embeds under them, or names an `xex_resources` target.
     `rust_project` names the Cargo manifest used by the `[vscode]` subtarget
@@ -840,11 +864,21 @@ def xbox360_title(
             files = resources,
         )
         resources = ":{}-resources".format(name)
+    if link_script:
+        native.export_file(
+            name = name + "-link-script",
+            src = link_script,
+        )
+    else:
+        xex_link_script(
+            name = name + "-link-script",
+            manifest = manifest,
+        )
     if rewrite:
         _EXECUTABLE_RULES[sysroot](
             name = name + "-executable",
             crate = crate,
-            link_script = link_script,
+            link_script = ":{}-link-script".format(name),
             rustc_flags = rustc_flags,
             target_compatible_with = compatible_with,
             **kwargs
@@ -860,10 +894,6 @@ def xbox360_title(
         )
         return
 
-    native.export_file(
-        name = name + "-link-script",
-        src = link_script,
-    )
     native.rust_binary(
         name = name + "-elf",
         crate = crate,
