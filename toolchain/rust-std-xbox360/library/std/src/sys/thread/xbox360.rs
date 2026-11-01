@@ -57,7 +57,7 @@ impl Thread {
                 stack as u32,
                 ptr::null_mut(),
                 0,
-                thread_entry as usize as u32,
+                (thread_entry as *const ()).expose_provenance() as u32,
                 init.expose_provenance() as u32,
                 CREATION_FLAGS,
             )
@@ -96,7 +96,7 @@ pub fn available_parallelism() -> io::Result<NonZero<usize>> {
 }
 
 pub fn current_os_id() -> Option<u64> {
-    None
+    Some(u64::from(xbox360_sys::xam::GetCurrentThreadId()))
 }
 
 pub fn yield_now() {
