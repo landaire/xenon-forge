@@ -197,6 +197,10 @@ LLVM auto-vectorizes scalar loops that the SDK compiler leaves scalar:
 
 VMX128 has the same cost as classic AltiVec for equivalent instructions. Its dot-product instruction and larger register file provide the main gains below. Lower cycle counts are better.
 
+![Classic AltiVec dot-product sequence compared with VMX128](docs/vmx128-dot-product.svg)
+
+![Classic AltiVec and VMX128 register files](docs/vmx128-register-file.svg)
+
 | Workload | Classic AltiVec | VMX128 | Speedup |
 | --- | ---: | ---: | ---: |
 | Four-component dot latency | 44.06 cycles | 14.02 cycles | 3.14x |
