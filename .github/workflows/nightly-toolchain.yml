@@ -143,6 +143,12 @@ jobs:
           restore-keys: |
             xbox360-llvm-${{ runner.os }}-
 
+      # The bootstrap script and Buck2 actions need Python 3.11 or later;
+      # Ubuntu 22.04 ships 3.10.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Install DotSlash and Buck2
         run: ./bootstrap.sh
 
