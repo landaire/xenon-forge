@@ -1,0 +1,63 @@
+{
+  "archive": {
+    "blake3": "e9ca60e0d9fda7c5e6e6374c5e117eaeefea3ee38e6419e32d98d969fde9b63e",
+    "format": "tar.xz",
+    "name": "xbox360-toolchain-x86_64-unknown-linux-gnu.tar.xz",
+    "sha256": "91e01240fbd0f701efea46959e629a88fb299ea6adc935f293fb33ede2b6dd58",
+    "size": 311641584,
+    "strip_prefix": "xbox360-toolchain-x86_64-unknown-linux-gnu",
+    "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-8ac3b4bc24e5/xbox360-toolchain-x86_64-unknown-linux-gnu.tar.xz"
+  },
+  "bootstrap_commit": "02ee4260ced11b7d49c71445e10dd660cfebae84",
+  "host": "x86_64-unknown-linux-gnu",
+  "llvm_commit": "6184f76016c590ca1ddeafa568454eb379391b79",
+  "llvm_tools": [
+    "FileCheck",
+    "clang",
+    "clang++",
+    "clang-cpp",
+    "ld.lld",
+    "llc",
+    "lld",
+    "llvm-addr2line",
+    "llvm-ar",
+    "llvm-dwarfdump",
+    "llvm-mc",
+    "llvm-nm",
+    "llvm-objcopy",
+    "llvm-objdump",
+    "llvm-ranlib",
+    "llvm-readelf",
+    "llvm-readobj",
+    "llvm-size",
+    "llvm-strings",
+    "llvm-strip",
+    "llvm-symbolizer",
+    "opt",
+    "rust-lld"
+  ],
+  "rust_commit": "a199a11abab9720154e5e2eff1887960432e8c95",
+  "rust_tools": [
+    "clippy-driver",
+    "rustc",
+    "rustdoc"
+  ],
+  "schema": 1,
+  "source_commit": "4fbeecd9784bb811a4efd1bd3ae3d7d8d9a530f5",
+  "target_spec": "share/xbox360/targets/powerpc64-unknown-xbox360-ilp32.json",
+  "toolchain_inputs": {
+    "bootstrap_commit": "02ee4260ced11b7d49c71445e10dd660cfebae84",
+    "files": {
+      "buck/custom_toolchain.bzl": "aad60892964e726b8167966b6b046d2ea066b071762b54ab44e87385471d2bd8",
+      "buck/toolchains.bzl": "1d6e7ed56978fda5118c6da13f4ccd9beaf94adf87879e98f678c022ce80cb1b",
+      "src/tools/package_toolchain.py": "138560a582b733eb1a7acf11a52e1e7f0cd6450afecb77f7e69c019e8bd62879",
+      "src/tools/toolchain_fingerprint.py": "86869ae4d4561658ea63f707afcb6ca16b3f4580beea74ef04a6cb68c12025c7",
+      "targets/powerpc64-unknown-xbox360-ilp32.json": "bf3c79009dac0fa09e7b58f128f0deebea8bec01c67d0a388c1e716dd5aa25cf"
+    },
+    "llvm_commit": "6184f76016c590ca1ddeafa568454eb379391b79",
+    "rust_commit": "a199a11abab9720154e5e2eff1887960432e8c95",
+    "schema": 1,
+    "toolchain_key": "8ac3b4bc24e51c2ef4092e328d9a731c0b008a6f5062ecf18d2dc0c33b5293ea"
+  },
+  "toolchain_key": "8ac3b4bc24e51c2ef4092e328d9a731c0b008a6f5062ecf18d2dc0c33b5293ea"
+}
