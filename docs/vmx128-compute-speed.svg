@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 280" width="900" height="280" role="img" aria-label="VMX128 speedup over classic AltiVec for dot products and matrix transforms">
+  <style>
+    text { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; fill: currentColor; }
+    .title { font-size: 18px; font-weight: 600; }
+    .muted { opacity: 0.68; }
+    .grid { stroke: currentColor; stroke-width: 1; opacity: 0.16; }
+    .baseline { stroke: currentColor; stroke-width: 2; opacity: 0.65; }
+    .bar { fill: currentColor; opacity: 0.58; }
+    @media (prefers-color-scheme: dark) { svg { filter: invert(1); } }
+  </style>
+
+  <text class="title" x="20" y="28">VMX128 compute speedup</text>
+  <text class="muted" x="20" y="50">Relative to classic AltiVec; higher is better</text>
+
+  <line class="grid" x1="240" y1="64" x2="240" y2="230"/>
+  <line class="baseline" x1="373" y1="64" x2="373" y2="230"/>
+  <line class="grid" x1="506" y1="64" x2="506" y2="230"/>
+  <line class="grid" x1="639" y1="64" x2="639" y2="230"/>
+  <line class="grid" x1="772" y1="64" x2="772" y2="230"/>
+  <line class="grid" x1="838" y1="64" x2="838" y2="230"/>
+
+  <text class="muted" x="240" y="250" text-anchor="middle">0×</text>
+  <text class="muted" x="373" y="250" text-anchor="middle">1× classic</text>
+  <text class="muted" x="506" y="250" text-anchor="middle">2×</text>
+  <text class="muted" x="639" y="250" text-anchor="middle">3×</text>
+  <text class="muted" x="772" y="250" text-anchor="middle">4×</text>
+
+  <text x="225" y="93" text-anchor="end">Dot latency</text>
+  <rect class="bar" x="240" y="74" width="418" height="28" rx="4"/>
+  <text x="668" y="93">3.14×</text>
+
+  <text x="225" y="153" text-anchor="end">Dot throughput</text>
+  <rect class="bar" x="240" y="134" width="543" height="28" rx="4"/>
+  <text x="793" y="153">4.08×</text>
+
+  <text x="225" y="213" text-anchor="end">4×4 transform</text>
+  <rect class="bar" x="240" y="194" width="169" height="28" rx="4"/>
+  <text x="419" y="213">1.27×</text>
+
+  <text class="muted" x="450" y="274" text-anchor="middle">Measured on a development kit</text>
+</svg>

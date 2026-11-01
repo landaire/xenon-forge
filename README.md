@@ -195,24 +195,13 @@ LLVM auto-vectorizes scalar loops that the SDK compiler leaves scalar:
 | Clang `-O3 -ffast-math`, VMX128 |                                     26 |
 | Rust `-O3`, VMX128              |                                     24 |
 
-VMX128 has the same cost as classic AltiVec for equivalent instructions. Its dot-product instruction and larger register file provide the main gains below. Lower cycle counts are better.
+VMX128 has the same cost as classic AltiVec for equivalent instructions. Its dot-product instruction and larger register file provide the main gains:
 
-![Classic AltiVec dot-product sequence compared with VMX128](docs/vmx128-dot-product.svg)
-
-![Classic AltiVec and VMX128 register files](docs/vmx128-register-file.svg)
-
-| Workload | Classic AltiVec | VMX128 | Speedup |
-| --- | ---: | ---: | ---: |
-| Four-component dot latency | 44.06 cycles | 14.02 cycles | 3.14x |
-| Four-component dot throughput | 5.71 cycles/dot | 1.40 cycles/dot | 4.08x |
-| 4x4 transform, 32 vs. 128 registers | 26.163 cycles/vector | 20.607 cycles/vector | 1.27x |
+![VMX128 compute speedup over classic AltiVec](docs/vmx128-compute-speed.svg)
 
 Equivalent vector loads and stores measured the same:
 
-| Copy implementation | 16 KiB traffic | 16 MiB traffic |
-| --- | ---: | ---: |
-| Classic `lvx` / `stvx` | 26.210 GB/s | 0.341 bytes/cycle |
-| High-register `lvx128` / `stvx128` | 26.224 GB/s | 0.340 bytes/cycle |
+![Classic AltiVec and VMX128 vector copy throughput](docs/vmx128-copy-speed.svg)
 
 See [the full VMX128 measurements](/docs/vmx128-measurements.md) for methodology and raw results.
 

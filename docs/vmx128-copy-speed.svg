@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 270" width="900" height="270" role="img" aria-label="Classic AltiVec and VMX128 vector copy throughput comparison">
+  <style>
+    text { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; fill: currentColor; }
+    .title { font-size: 18px; font-weight: 600; }
+    .muted { opacity: 0.68; }
+    .classic { fill: currentColor; opacity: 0.30; }
+    .vmx { fill: currentColor; opacity: 0.68; }
+    .axis { stroke: currentColor; stroke-width: 1; opacity: 0.35; }
+    @media (prefers-color-scheme: dark) { svg { filter: invert(1); } }
+  </style>
+
+  <text class="title" x="20" y="28">Vector copy throughput</text>
+  <text class="muted" x="20" y="50">Equivalent classic and VMX128 loads/stores have the same measured speed</text>
+
+  <text x="205" y="95" text-anchor="end">16 KiB, cached</text>
+  <rect class="classic" x="220" y="70" width="524" height="24" rx="3"/>
+  <rect class="vmx" x="220" y="100" width="524" height="24" rx="3"/>
+  <text x="754" y="88">Classic 26.210 GB/s</text>
+  <text x="754" y="118">VMX128 26.224 GB/s</text>
+
+  <text x="205" y="187" text-anchor="end">16 MiB</text>
+  <rect class="classic" x="220" y="162" width="524" height="24" rx="3"/>
+  <rect class="vmx" x="220" y="192" width="522" height="24" rx="3"/>
+  <text x="754" y="180">Classic 0.341 B/cycle</text>
+  <text x="754" y="210">VMX128 0.340 B/cycle</text>
+
+  <line class="axis" x1="220" y1="228" x2="744" y2="228"/>
+  <rect class="classic" x="300" y="242" width="14" height="14" rx="2"/>
+  <text x="322" y="254">Classic AltiVec</text>
+  <rect class="vmx" x="465" y="242" width="14" height="14" rx="2"/>
+  <text x="487" y="254">VMX128 high registers</text>
+</svg>
