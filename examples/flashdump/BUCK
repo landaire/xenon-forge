@@ -10,7 +10,7 @@ xbox360_title(
     std = "system",
     rewrite = True,
     deps = [
-        "//crates/xbox360:xbox360",
+        "//src/crates/xbox360:xbox360",
         "//third-party/rust:thiserror",
     ],
 )
