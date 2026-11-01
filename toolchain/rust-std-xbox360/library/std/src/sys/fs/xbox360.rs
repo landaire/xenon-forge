@@ -41,9 +41,6 @@ const SHARE_ALL: ShareAccess = ShareAccess::READ.union(ShareAccess::WRITE).union
 /// most 42 bytes.
 const DIRECTORY_BUFFER: usize = 0x200;
 
-const STATUS_NO_MORE_FILES: NtStatus = NtStatus(0x8000_0006);
-const STATUS_NO_SUCH_FILE: NtStatus = NtStatus(0xc000_000f);
-
 fn cvt(status: NtStatus) -> io::Result<()> {
     if status == NtStatus::SUCCESS { Ok(()) } else { Err(io::Error::from_raw_os_error(status.0 as i32)) }
 }
@@ -310,7 +307,7 @@ impl ReadDir {
         };
         // A directory without entries answers the first query with
         // STATUS_NO_SUCH_FILE.
-        if status == STATUS_NO_MORE_FILES || status == STATUS_NO_SUCH_FILE {
+        if status == KernelError::NoMoreFiles.status() || status == KernelError::NoSuchFile.status() {
             return Ok(false);
         }
         cvt(status)?;

@@ -150,11 +150,13 @@ impl Socket {
 
     // XNET_STARTUP_BYPASS_SECURITY does not cover the system's sockets: on a
     // development kit their datagrams were accepted and never sent. SOL_SOCKET
-    // option 0x5801 lets one exchange plain traffic with any host. A connection
-    // that a marked listener accepts worked without it.
+    // option 0x5801, which `xbox360-sys` does not name, lets one exchange plain
+    // traffic with any host. A connection that a marked listener accepts worked
+    // without it.
     #[cfg(xbox360_system)]
     fn mark_insecure(&self) -> io::Result<()> {
-        self.set_option(SocketLevel::Socket, SocketOption(0x5801), 1u32)
+        const INSECURE: SocketOption = SocketOption(0x5801);
+        self.set_option(SocketLevel::Socket, INSECURE, 1u32)
     }
 
     fn set_option<T>(&self, level: SocketLevel, option: SocketOption, value: T) -> io::Result<()> {
