@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Deploy and launch an Xbox 360 title through xeedee."""
+"""Deploy and launch an Xbox 360 title, or load a system module, through
+xeedee."""
 
 from __future__ import annotations
 
@@ -39,6 +40,31 @@ def remote_parts(path: str) -> tuple[str, list[str]]:
     if not parts:
         raise ValueError(f"remote directory {path!r} must be below the drive root")
     return drive, parts
+
+
+# Module flag of a title in the XEX2 header.
+XEX_MODULE_TITLE = 0x1
+# XBDM `dbgextld name=NAME` loads DEVKIT:\DMEXT\NAME into the system process.
+EXTENSION_DIRECTORY = r"DEVKIT:\DMEXT"
+
+
+def is_title(xex: Path) -> bool:
+    with xex.open("rb") as file:
+        header = file.read(8)
+    if len(header) < 8 or header[:4] != b"XEX2":
+        raise ValueError(f"{xex} is not a XEX2 image")
+    return int.from_bytes(header[4:8], "big") & XEX_MODULE_TITLE != 0
+
+
+def load_module(tool: str, host: str, xex: Path) -> None:
+    deploy(tool, host, EXTENSION_DIRECTORY, xex)
+    # XBDM holds one extension. Loading it again only returns its handle,
+    # and loading another fails, until the console restarts or
+    # `dbgextld unload` frees it.
+    subprocess.run(
+        xeedee_command(tool, host, "raw", f"dbgextld name={xex.name}"),
+        check=True,
+    )
 
 
 def resolve_tool(configured: str | None, name: str, fallback: str) -> str:
@@ -286,6 +312,13 @@ def main() -> int:
     kd_tool = resolve_tool(
         arguments.kd_tool, "openxbdm-kd", arguments.fallback_kd_tool
     )
+    if not is_title(arguments.xex):
+        if arguments.debug or arguments.debug_server or arguments.title_arguments:
+            raise SystemExit(
+                "run_title.py: a system module takes no arguments and has no debug flavor"
+            )
+        load_module(xbdm_tool, arguments.host, arguments.xex)
+        return 0
     if arguments.debug or arguments.debug_server:
         print("starting Xbox 360 debugger", flush=True)
 

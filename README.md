@@ -124,6 +124,8 @@ bin/buck2 run //src/examples/hello:hello -- first "second argument"
 bin/buck2 run //src/examples/stdhello:stdhello[debug]
 ```
 
+A module without the `TITLE` module flag, such as a system module, is copied to `DEVKIT:\DMEXT` and loaded with XBDM `dbgextld` instead, without arguments or the `[debug]` flavor. XBDM holds one such module, until the console restarts: running it again does not start it again, and running another fails.
+
 If running the `[debug] flavor:
 
 1. Uploads the XEX.
