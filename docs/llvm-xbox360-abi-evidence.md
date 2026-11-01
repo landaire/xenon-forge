@@ -678,7 +678,7 @@ This generated caller behavior establishes that `v0`-`v63` are volatile and
 VMX128 target models all 128 registers and preserves v64-v127.
 Supported 16-byte vectors use v1-v13 for arguments and v1 for results;
 arguments beyond v13 use 16-byte stack slots. The console ABI and SIMD
-probes are in `examples/vmx128test`.
+probes are in `src/examples/vmx128test`.
 
 ## Stack probes
 
@@ -780,7 +780,7 @@ The hypervisor boundary is therefore a small target-specific convention layered 
 
 ## Physical hardware smoke test
 
-The `examples/chello` title was compiled with the patched Clang using
+The `src/examples/chello` title was compiled with the patched Clang using
 `--target=powerpc64-unknown-xbox360`, linked as ELF32, converted to XEX, and
 launched on a physical Xbox 360 development kit through XBDM. The deployed XEX
 had SHA-256
@@ -809,7 +809,7 @@ Xbox function. That expanded the fixed-size `DbgPrint` import record from 16 to
 `is64BitELFABI()` keeps Xbox ELF32 thunks at 16 bytes while preserving the
 28-byte function body for ELF64 LV2.
 
-The Rust `examples/stdhello` title was also compiled with the patched Rust
+The Rust `src/examples/stdhello` title was also compiled with the patched Rust
 toolchain and LLVM backend, converted to XEX, and launched on the same physical
 console. Its big-endian `STAGE` word at `0x82040000` reached:
 

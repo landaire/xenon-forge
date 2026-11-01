@@ -275,10 +275,10 @@ remove stale result files, save debug output and return failure on test
 failures, exceptions or timeout.
 
 ```sh
-examples/vmx128test/run.sh /tmp/vmx128test
-examples/sfmode/run.sh /tmp/sfmode
-examples/sfmode/run.sh /tmp/sfmode-both sf1=1
-TIMEOUT=1800 examples/vmx128bench/run.sh /tmp/vmx128bench
+src/examples/vmx128test/run.sh /tmp/vmx128test
+src/examples/sfmode/run.sh /tmp/sfmode
+src/examples/sfmode/run.sh /tmp/sfmode-both sf1=1
+TIMEOUT=1800 src/examples/vmx128bench/run.sh /tmp/vmx128bench
 ```
 
 Compiler-comparison functions are generated from project C/Rust sources. Regeneration
@@ -289,7 +289,7 @@ it does not copy an SDK library.
 
 ```sh
 SDK=/path/to/sdk WINE=/path/to/wine WINEPREFIX=/path/to/prefix \
-  CLANG=/path/to/clang examples/vmx128bench/cmp/make.sh
+  CLANG=/path/to/clang src/examples/vmx128bench/cmp/make.sh
 ```
 
 `CLEXE` may select another installed compiler executable. Compiler flags and
@@ -299,8 +299,8 @@ refuses unverified relocation addends rather than inferring their meaning.
 Generate full tables from the recorded data:
 
 ```sh
-python3 examples/vmx128bench/gen/report.py docs/measurements/vmx128-console.csv
-python3 examples/vmx128bench/gen/cmp_report.py \
+python3 src/examples/vmx128bench/gen/report.py docs/measurements/vmx128-console.csv
+python3 src/examples/vmx128bench/gen/cmp_report.py \
   docs/measurements/vmx128-static.csv docs/measurements/vmx128-console.csv
 ```
 

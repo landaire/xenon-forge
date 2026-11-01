@@ -57,7 +57,7 @@ Xbox360ExecutableInfo = provider(fields = {
 _TOOL_ATTRS = {
     "_asm_rewrite": attrs.exec_dep(
         providers = [RunInfo],
-        default = "xbox360//crates/xbox360-asm-rewrite:xbox360-asm-rewrite",
+        default = "xbox360//src/crates/xbox360-asm-rewrite:xbox360-asm-rewrite",
     ),
     "_console_kd_target": attrs.string(default = read_root_config("xbox360", "console_kd_target") or ""),
     "_console_xbdm": attrs.string(default = read_root_config("xbox360", "console_xbdm") or ""),
@@ -82,7 +82,7 @@ _TOOL_ATTRS = {
         providers = [RunInfo],
         default = "xbox360//buck:xeedee",
     ),
-    "_xex_link": attrs.exec_dep(providers = [RunInfo], default = "xbox360//crates/xex-link:xex-link"),
+    "_xex_link": attrs.exec_dep(providers = [RunInfo], default = "xbox360//src/crates/xex-link:xex-link"),
 }
 
 def _run_title_command(

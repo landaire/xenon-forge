@@ -16,10 +16,10 @@ path = "lib.rs"
 
 [dependencies]
 insta = "1.47"
-# The image decoder tests (crates/xbox360-image).
+# The image decoder tests (src/crates/xbox360-image).
 jpeg-encoder = "0.7"
 png = "0.18"
-# The egui backend (crates/xbox360-egui).
+# The egui backend (src/crates/xbox360-egui).
 egui = { version = "0.32", default-features = false, features = ["default_fonts"] }
-# The features of examples/tokweb.
+# The features of src/examples/tokweb.
 tokio = { version = "1", default-features = false, features = ["rt", "rt-multi-thread", "time", "macros"] }

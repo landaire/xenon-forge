@@ -72,7 +72,7 @@ jobs:
       - name: Compute the toolchain input fingerprint
         id: fingerprint
         run: |
-          python3 tools/toolchain_fingerprint.py \
+          python3 src/tools/toolchain_fingerprint.py \
             --bootstrap-root toolchain/buck2-rustc-bootstrap \
             --output "$RUNNER_TEMP/toolchain-inputs.json"
           for name in bootstrap_commit llvm_commit rust_commit toolchain_key; do
@@ -163,7 +163,7 @@ jobs:
       - name: Record and verify the toolchain inputs
         run: |
           mkdir -p dist
-          python3 tools/toolchain_fingerprint.py \
+          python3 src/tools/toolchain_fingerprint.py \
             --bootstrap-root toolchain/buck2-rustc-bootstrap \
             --output dist/toolchain-inputs.json
           actual=$(jq -r .toolchain_key dist/toolchain-inputs.json)
@@ -183,7 +183,7 @@ jobs:
           libstdcxx=$(c++ -print-file-name=libstdc++.so.6)
           libgcc=$(c++ -print-file-name=libgcc_s.so.1)
           epoch=$(git show -s --format=%ct "$SOURCE_COMMIT")
-          python3 tools/package_toolchain.py \
+          python3 src/tools/package_toolchain.py \
             --rust-dist "$RUST_DIST" \
             --llvm-dist "$LLVM_DIST" \
             --target-spec targets/powerpc64-unknown-xbox360.json \

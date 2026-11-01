@@ -7,7 +7,7 @@ Xenon Forge is a buck2/LLVM-based toolchain for Xbox 360. This repo was original
 
 The toolchain has three main custom things to it:
 
-1. The Xbox 360 Xenon processor is a 64-bit processor running in 32-bit mode. LLVM doesn't really support this today, its PPC64 support is generally pretty broken, and LLVM only emits ELF32 for PPC32 binaries. To get the binaries running on an Xbox 360, we statically rewrite from ELF32 to PE then pack that as an XEX2 using [`xex-link`](/crates/xex-link).
+1. The Xbox 360 Xenon processor is a 64-bit processor running in 32-bit mode. LLVM doesn't really support this today, its PPC64 support is generally pretty broken, and LLVM only emits ELF32 for PPC32 binaries. To get the binaries running on an Xbox 360, we statically rewrite from ELF32 to PE then pack that as an XEX2 using [`xex-link`](/src/crates/xex-link).
 2. **Optional**: For Rust, [we must patch `stdlib`](/toolchain/rust-std-xbox360) to enlighten the standard library about Rust APIs (filesystem, networking, etc.)
 3. **Optional**: For proper Xenon processor support, [we have a fork of LLVM](https://github.com/llvm/llvm-project/compare/main...landaire-contrib:llvm-project:xbox360-abi-upstream-complete) which fixes some bugs in the PPC backend, adds support for PPC64-ILP32 (modeled off how MSVC emits code for Xenon), and also adds support for VMX128 instructions.
 
@@ -54,13 +54,13 @@ On Windows:
 On a Unix system run:
 
 ```
-bin/buck2 build //examples/hello:hello --show-output
+bin/buck2 build //src/examples/hello:hello --show-output
 ```
 
 On Windows:
 
 ```
-bin/buck2.cmd build //examples/hello:hello --show-output
+bin/buck2.cmd build //src/examples/hello:hello --show-output
 ```
 
 ### Advanced Usage
@@ -89,13 +89,13 @@ And the following optional keys:
 This will allow you to build, deploy, and run directly to your console:
 
 ```shell
-bin/buck2 run //examples/hello:hello
+bin/buck2 run //src/examples/hello:hello
 
 # With arguments
-bin/buck2 run //examples/hello:hello -- first "second argument"
+bin/buck2 run //src/examples/hello:hello -- first "second argument"
 
 # Debug
-bin/buck2 run //examples/stdhello:stdhello[debug]
+bin/buck2 run //src/examples/stdhello:stdhello[debug]
 ```
 
 If running the `[debug] flavor:
@@ -115,10 +115,10 @@ bin/buck2 build //games:launcher[vscode] --show-output
 
 ## Components
 
-- [`xex-link`](/crates/xex-link) converts an ELF to XEX
-- [`xbox360-asm-rewrite`](/crates/xbox360-asm-rewrite) contains multiple features, but is mostly used for rewriting some suboptimal assembly patterns LLVM emits (such as using common functions for saving/restoring GPRs)
+- [`xex-link`](/src/crates/xex-link) converts an ELF to XEX
+- [`xbox360-asm-rewrite`](/src/crates/xbox360-asm-rewrite) contains multiple features, but is mostly used for rewriting some suboptimal assembly patterns LLVM emits (such as using common functions for saving/restoring GPRs)
 - [rust-std-xbox360](/toolchain/rust-std-xbox360) enlightens the Rust stdlib to be Xenon-aware
-- [/crates/xbox360*](/crates) provides Xbox 360 SDK support to Rust. Currently at this time includes GPU, video, XAM, and direct system `extern` APIs for invoking threads, networking, etc. without `stdlib`.
+- [/crates/xbox360*](/src/crates) provides Xbox 360 SDK support to Rust. Currently at this time includes GPU, video, XAM, and direct system `extern` APIs for invoking threads, networking, etc. without `stdlib`.
 - [LLVM fork](https://github.com/llvm/llvm-project/compare/main...landaire-contrib:llvm-project:xbox360-abi-upstream-complete) (see below)[#llvm-fork].
 
 External tools (hash-pinned downloads) include:

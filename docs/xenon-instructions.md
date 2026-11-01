@@ -21,7 +21,7 @@ width, pointer width, ABI width and execution mode are separate properties.
 - Loads use the low 32 bits of the effective address. Update forms
   retain the full computed base register value.
 
-`examples/sfmode` probes each instruction in assembly, without relying on
+`src/examples/sfmode` probes each instruction in assembly, without relying on
 compiler-generated doubleword comparisons. The SF=0 and SF=1 passes
 produced 140 result lines with no unexpected result. A separate
 compiler-output probe tested 11 boundary cases across eight outputs:
@@ -125,7 +125,7 @@ The same as the console compiler's, for `extern "C"` and `extern "system"`:
   structs return in r3, the others through a hidden pointer. `char` is
   signed, so `core::ffi::c_char` is `i8` on both targets.
 
-`examples/vmx128test` checks this against functions compiled by the console
+`src/examples/vmx128test` checks this against functions compiled by the console
 compiler, in both directions, including 70 vectors kept live across calls.
 
 ### Rust
@@ -157,15 +157,15 @@ Xbox target include v0-v63; v64-v127 remain callee-saved. With VMX128
 disabled, high-register clobbers reserve no allocatable vector values.
 An assembly block must declare every register it changes. A
 `global_asm!` function must follow the convention: v0-v63 are free,
-v64-v127 must be saved (see `examples/vmx128test/src/probes.s`).
+v64-v127 must be saved (see `src/examples/vmx128test/src/probes.s`).
 On the PPC32 target the VMX128 instructions need `.long` words.
 
 ### Console verification
 
-`examples/vmx128test/run.sh /tmp/vmx128test-run` builds and runs the SIMD
+`src/examples/vmx128test/run.sh /tmp/vmx128test-run` builds and runs the SIMD
 and vector ABI tests, including SDK-compiled functions from our own C
-sources. `examples/sfmode/run.sh /tmp/sfmode-run` probes execution-mode
-semantics. `examples/vmx128bench/run.sh /tmp/vmx128bench-run` measures
+sources. `src/examples/sfmode/run.sh /tmp/sfmode-run` probes execution-mode
+semantics. `src/examples/vmx128bench/run.sh /tmp/vmx128bench-run` measures
 instruction costs, bandwidth and compiler output. Set `XBOX` and
 `XEEDEE` for another development kit or client. Each runner serializes
 console access and saves the debug log and result file.

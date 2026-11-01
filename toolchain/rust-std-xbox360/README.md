@@ -57,7 +57,7 @@ The devkit kernel traps `lwarx`/`stwcx.` that are not in the interrupt-bracketed
 
 Key constraints: mtmsrd(disable) immediately before lwarx, the restore immediately after stwcx, and every lwarx path must reach a stwcx within a short window.
 
-`max-atomic-width` is 64. The CPU is 64-bit running 32-bit code, so 8-byte compare-and-swap and read-modify-write use the same protected form with `ldarx`/`stdcx.`, the values joined from and split into 32-bit register halves around the reservation. 8-byte atomic loads and stores are one aligned `ld` or `std` (single-copy atomic) between full barriers; `atomic_load`/`atomic_store` route size 8 there because LLVM would otherwise call `__atomic_load_8`/`__atomic_store_8` on a 32-bit target. `examples/atomics64` checks the operations and four threads adding across the 32-bit halves on a development kit.
+`max-atomic-width` is 64. The CPU is 64-bit running 32-bit code, so 8-byte compare-and-swap and read-modify-write use the same protected form with `ldarx`/`stdcx.`, the values joined from and split into 32-bit register halves around the reservation. 8-byte atomic loads and stores are one aligned `ld` or `std` (single-copy atomic) between full barriers; `atomic_load`/`atomic_store` route size 8 there because LLVM would otherwise call `__atomic_load_8`/`__atomic_store_8` on a 32-bit target. `src/examples/atomics64` checks the operations and four threads adding across the 32-bit halves on a development kit.
 
 ## Layout
 
@@ -88,11 +88,11 @@ Requires `rustup component add rust-src` on the pinned stable toolchain. The edi
 
 To move std to a new `xbox360-sys` release: change the version in `library/std/Cargo.toml`, replace `library/vendor/xbox360-sys-*` with the output of `cargo vendor --versioned-dirs` for that release, resolve a scratch copy of the overlaid library to update `library/Cargo.lock`, and run `buck/update_sysroot.py` to regenerate `sysroot/crates.bzl`.
 
-To build against an unpublished `xbox360-sys`, copy the library to a scratch directory instead, point the dependency at `crates/xbox360-sys` with `path = "..."`, and set `__CARGO_TESTS_ONLY_SRC_ROOT` to that `library` directory. Cargo adds the lock entry when it resolves the scratch library.
+To build against an unpublished `xbox360-sys`, copy the library to a scratch directory instead, point the dependency at `src/crates/xbox360-sys` with `path = "..."`, and set `__CARGO_TESTS_ONLY_SRC_ROOT` to that `library` directory. Cargo adds the lock entry when it resolves the scratch library.
 
 ## Build a title
 
-    cd examples/stdhello
+    cd src/examples/stdhello
     RUSTC_BOOTSTRAP=1 cargo build --release -Zbuild-std=std,panic_abort -Zjson-target-spec
 
 Cargo does not rebuild std when the library sources change. To force a std rebuild after editing the backend, delete the build-std cache:

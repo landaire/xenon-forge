@@ -5,7 +5,7 @@ Xbox 360 target.
 Usage: update_sysroot.py UNIT_GRAPH LIBRARY_CARGO_LOCK
 
 UNIT_GRAPH is Cargo's unit graph of a std title, built against the overlaid
-library source of the pinned release. From examples/stdhello, with the
+library source of the pinned release. From src/examples/stdhello, with the
 overlay copied into rustup's rust-src of that release:
 
     RUSTC_BOOTSTRAP=1 cargo build --release -Zjson-target-spec \\
