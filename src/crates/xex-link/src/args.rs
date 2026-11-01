@@ -27,10 +27,13 @@ manifest keys:
   title_id = INT          title id (default 0x00000000)
   media_id = INT          media id (default 0x00000000)
   load_address = INT      image base the ELF was linked at (default 0x82000000)
+  page_size = INT         0x1000 (sets SMALL_PAGES) or 0x10000; default from the
+                          load address: 0x10000 below 0x90000000, 0x1000 from
+                          0x90000000 to 0x9FFFFFFF
   version = \"VER\"         title version and export table version, dotted
                           a.b.c.d or \"0xHEX\" (default \"0.0.0.0\")
   base_version = \"VER\"    minimum loader version, same format (default \"0.0.0.0\")
-  image_flags = [\"FLAG\"]  ImageFlags names or \"0xHEX\" (e.g. SMALL_PAGES; default [])
+  image_flags = [\"FLAG\"]  ImageFlags names or \"0xHEX\" (default [])
   module_flags = [\"FLAG\"] ModuleFlags names or \"0xHEX\" (default [\"TITLE\"])
   bounding_path = \"PATH\"  device path the loaded file must resolve to
   compress = BOOL         LZX-compress the image (Normal, 64 KB window; default false)
@@ -98,8 +101,12 @@ impl Command {
         let manifest = match manifest_path {
             Some(path) => {
                 let text = io(&path, std::fs::read_to_string(&path))?;
-                Manifest::parse(Path::new(&path), &text)
-                    .map_err(|e| XexLinkError::Manifest(e).into_report())?
+                let (manifest, warnings) = Manifest::parse(Path::new(&path), &text)
+                    .map_err(|e| XexLinkError::Manifest(e).into_report())?;
+                for warning in warnings {
+                    eprintln!("xex-link: warning: manifest {path}: {warning}");
+                }
+                manifest
             }
             None => Manifest::default(),
         };

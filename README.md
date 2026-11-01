@@ -191,9 +191,10 @@ As part of our build integration, xex-link reads a manifest (`xex.toml` in the p
 title_id = 0x00000000       # integer
 media_id = 0x00000000       # integer
 load_address = 0x82000000   # image base the ELF was linked at
+# page_size = 0x10000       # 0x1000 (SMALL_PAGES) or 0x10000; default from load_address
 version = "0.0.0.0"         # title and export table version: a.b.c.d or "0xHEX"
 base_version = "0.0.0.0"    # minimum loader version, same format
-image_flags = []            # ImageFlags names or "0xHEX", e.g. ["SMALL_PAGES"]
+image_flags = []            # ImageFlags names or "0xHEX"
 module_flags = ["TITLE"]    # ModuleFlags names or "0xHEX"
 compress = false            # LZX-compress the image (Normal, 64 KB window)
 tls_slots = 64              # TLS_INFO slots, 0 omits the header; default 64 with TITLE, none otherwise
@@ -210,7 +211,7 @@ min_version = "2.0.1861.0"  # minimum imported module version
 # min_version = "2.0.1861.0" # oldest compatible version in the export table
 ```
 
-The load address must match the image base the ELF was linked at and must be a multiple of the page size: 64 KB, or 4 KB with `SMALL_PAGES`.
+The load address must match the image base the ELF was linked at and must be a multiple of the page size. The loader ties the page size to the load address: images load only in 0x80000000-0x9FFFFFFF, with 64 KB pages in 0x80000000-0x8FFFFFFF (titles, at 0x82000000 by default) and 4 KB pages in 0x90000000-0x9FFFFFFF, where the console's system modules are. A development kit refused other combinations with "Load address violation" (0xC000007B). Without `page_size` or `SMALL_PAGES` in `image_flags`, xex-link takes the page size from the load address and sets `SMALL_PAGES` for 4 KB pages. A page size set either way is kept; xex-link warns when the loader is known to refuse it, or when the load address is outside 0x80000000-0x9FFFFFFF. Pick a system module address no other module uses: on a development kit, xbdm.xex is at 0x91F00000.
 
 xex-link also handles embedding of data in the XEX, but this does not get declared in the `xex.toml` since the build system must be aware of the dependencies. Instead, the `xbox360_title` declares the `resources`:
 

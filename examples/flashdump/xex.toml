@@ -1,4 +1,3 @@
 load_address = 0x91d00000
-image_flags = ["SMALL_PAGES"]
 module_flags = ["DLL"]
 version = "1.0.0.0"

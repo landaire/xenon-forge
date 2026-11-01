@@ -57,11 +57,9 @@ mod tests {
         assert!(script.contains(". = 0x82010000;"), "{script}");
         assert!(script.contains("ALIGN(0x10000)"), "{script}");
 
-        let manifest = Manifest::parse(
-            Path::new("xex.toml"),
-            "load_address = 0x91d00000\nimage_flags = [\"SMALL_PAGES\"]",
-        )
-        .unwrap();
+        let manifest = Manifest::parse(Path::new("xex.toml"), "load_address = 0x91d00000")
+            .unwrap()
+            .0;
         let script = link_script(&manifest);
         assert!(script.contains(". = 0x91d01000;"), "{script}");
         assert!(script.contains("ALIGN(0x1000)"), "{script}");

@@ -37,12 +37,40 @@ pub enum ManifestErrorKind {
     #[error("{location}: invalid bounding path {value:?}; expected non-empty printable ASCII")]
     InvalidBoundingPath { value: String, location: Location },
     #[error(
-        "{location}: load address {address:#010x} is not a multiple of the 0x{align:x} page size"
+        "{}load address {address:#010x} is not a multiple of the 0x{align:x} page size",
+        location_prefix(.location)
     )]
     UnalignedLoadAddress {
         address: u32,
         align: u32,
-        location: Location,
+        location: Option<Location>,
+    },
+    #[error("{location}: page_size {page_size:#x} is neither 0x1000 nor 0x10000")]
+    InvalidPageSize { page_size: u32, location: Location },
+    #[error("{location}: page_size 0x10000 contradicts SMALL_PAGES in image_flags")]
+    ConflictingPageSize { location: Location },
+}
+
+/// A setting the loader is known to refuse. xex-link keeps it.
+#[derive(Debug, Error, PartialEq, Eq)]
+pub enum ManifestWarning {
+    #[error(
+        "{}load address {address:#010x} is outside 0x80000000-0x9fffffff; a development kit refused images elsewhere",
+        location_prefix(.location)
+    )]
+    LoadAddressOutsideImages {
+        address: u32,
+        location: Option<Location>,
+    },
+    #[error(
+        "{}page size {page_size:#x} at load address {address:#010x}; the loader requires {required:#x} there and refuses the image with 0xC000007B",
+        location_prefix(.location)
+    )]
+    PageSizeMismatch {
+        address: u32,
+        page_size: u32,
+        required: u32,
+        location: Option<Location>,
     },
 }
 

@@ -18,13 +18,16 @@ use xex2::opt::ModuleFlags;
 
 use crate::imports::ExportingModule;
 use crate::imports::LIBRARIES;
-use crate::layout::page_size;
+use crate::layout::LARGE_PAGE;
+use crate::layout::SMALL_PAGE;
+use crate::layout::image_page_size;
 use crate::manifest::error::Location;
 use crate::manifest::error::ManifestErrorKind;
 use crate::manifest::error::ManifestKey;
 use crate::manifest::error::VersionError;
 
 pub use self::error::ManifestError;
+pub use self::error::ManifestWarning;
 
 pub const DEFAULT_LOAD_ADDRESS: VirtualAddress = VirtualAddress(0x8200_0000);
 pub const DEFAULT_IMPORT_VERSION: Version = Version {
@@ -102,7 +105,9 @@ impl Default for Manifest {
 
 impl Manifest {
     /// Parse and validate manifest `text`; `path` is recorded in errors.
-    pub fn parse(path: &Path, text: &str) -> Result<Self, ManifestError> {
+    /// Settings the loader is known to refuse are kept and reported as
+    /// warnings.
+    pub fn parse(path: &Path, text: &str) -> Result<(Self, Vec<ManifestWarning>), ManifestError> {
         let fail = |kind| ManifestError {
             path: path.to_path_buf(),
             kind,
@@ -128,6 +133,7 @@ struct RawManifest {
     version: Option<Spanned<String>>,
     base_version: Option<Spanned<String>>,
     image_flags: Option<Vec<Spanned<String>>>,
+    page_size: Option<Spanned<u32>>,
     module_flags: Option<Vec<Spanned<String>>>,
     bounding_path: Option<Spanned<String>>,
     compress: Option<bool>,
@@ -139,10 +145,16 @@ struct RawManifest {
 
 impl RawManifest {
     // Absent keys take the values used without a manifest.
-    fn resolve(self, text: &str) -> Result<Manifest, ManifestErrorKind> {
+    fn resolve(self, text: &str) -> Result<(Manifest, Vec<ManifestWarning>), ManifestErrorKind> {
         let defaults = Manifest::default();
+        let mut warnings = Vec::new();
 
-        let image_flags = match self.image_flags {
+        let image_flags_location = self
+            .image_flags
+            .as_ref()
+            .and_then(|names| names.first())
+            .map(|name| Location::at(text, name.span().start));
+        let mut image_flags: ImageFlags = match self.image_flags {
             Some(names) => flags(text, ManifestKey::ImageFlags, names)?,
             None => defaults.image_flags,
         };
@@ -151,21 +163,68 @@ impl RawManifest {
             None => defaults.module_flags,
         };
 
-        let load_address = match self.load_address {
-            Some(address) => {
-                let align = page_size(image_flags);
-                if address.get_ref().0 % align != 0 {
-                    return Err(ManifestErrorKind::UnalignedLoadAddress {
-                        address: address.get_ref().0,
-                        align,
-                        location: Location::at(text, address.span().start),
+        let (load_address, location) = match self.load_address {
+            Some(address) => (
+                address.get_ref().0,
+                Some(Location::at(text, address.span().start)),
+            ),
+            None => (defaults.load_address.0, None),
+        };
+
+        // A page size set with `page_size` or SMALL_PAGES is kept. Otherwise
+        // the load address decides it where the loader requires one.
+        let requested = match self.page_size {
+            Some(page_size) => {
+                let page = *page_size.get_ref();
+                let page_location = Location::at(text, page_size.span().start);
+                if page != SMALL_PAGE && page != LARGE_PAGE {
+                    return Err(ManifestErrorKind::InvalidPageSize {
+                        page_size: page,
+                        location: page_location,
                     });
                 }
-
-                address.into_inner()
+                if page == LARGE_PAGE && image_flags.contains(ImageFlags::SMALL_PAGES) {
+                    return Err(ManifestErrorKind::ConflictingPageSize {
+                        location: page_location,
+                    });
+                }
+                Some((page, Some(page_location)))
             }
-            None => defaults.load_address,
+            None if image_flags.contains(ImageFlags::SMALL_PAGES) => {
+                Some((SMALL_PAGE, image_flags_location))
+            }
+            None => None,
         };
+        let required = image_page_size(load_address);
+        if required.is_none() {
+            warnings.push(ManifestWarning::LoadAddressOutsideImages {
+                address: load_address,
+                location,
+            });
+        }
+        let page = match (requested, required) {
+            (Some((page, page_location)), Some(required)) if page != required => {
+                warnings.push(ManifestWarning::PageSizeMismatch {
+                    address: load_address,
+                    page_size: page,
+                    required,
+                    location: page_location,
+                });
+                page
+            }
+            (Some((page, _)), _) => page,
+            (None, Some(required)) => required,
+            (None, None) => LARGE_PAGE,
+        };
+        image_flags.set(ImageFlags::SMALL_PAGES, page == SMALL_PAGE);
+        if load_address % page != 0 {
+            return Err(ManifestErrorKind::UnalignedLoadAddress {
+                address: load_address,
+                align: page,
+                location,
+            });
+        }
+        let load_address = VirtualAddress(load_address);
 
         let bounding_path = self
             .bounding_path
@@ -201,7 +260,7 @@ impl RawManifest {
             .map(|exports| exports.resolve(text))
             .transpose()?;
 
-        Ok(Manifest {
+        let manifest = Manifest {
             title_id: self.title_id.unwrap_or(defaults.title_id),
             media_id: self.media_id.unwrap_or(defaults.media_id),
             load_address,
@@ -231,7 +290,8 @@ impl RawManifest {
                     .contains(ModuleFlags::TITLE)
                     .then_some(DEFAULT_TITLE_TLS_SLOTS),
             },
-        })
+        };
+        Ok((manifest, warnings))
     }
 }
 
@@ -366,6 +426,12 @@ mod tests {
     use super::*;
 
     fn parse(text: &str) -> Result<Manifest, ManifestErrorKind> {
+        parse_with_warnings(text).map(|(manifest, _)| manifest)
+    }
+
+    fn parse_with_warnings(
+        text: &str,
+    ) -> Result<(Manifest, Vec<ManifestWarning>), ManifestErrorKind> {
         Manifest::parse(Path::new("xex.toml"), text).map_err(|error| error.kind)
     }
 
@@ -462,9 +528,73 @@ min_version = "2.0.1861.0"
     }
 
     #[test]
-    fn small_pages_permit_a_4k_aligned_load_address() {
-        let manifest = parse("load_address = 0x82001000\nimage_flags = [\"SMALL_PAGES\"]").unwrap();
-        assert_eq!(manifest.load_address, VirtualAddress(0x8200_1000));
+    fn the_load_address_decides_an_unset_page_size() {
+        let small = |text| {
+            let (manifest, warnings) = parse_with_warnings(text).unwrap();
+            assert_eq!(warnings, [], "{text}");
+            manifest.image_flags.contains(ImageFlags::SMALL_PAGES)
+        };
+        assert!(!small(""));
+        assert!(!small("load_address = 0x8FFF0000"));
+        assert!(small("load_address = 0x90000000"));
+        assert!(small("load_address = 0x91D01000"));
+    }
+
+    #[test]
+    fn a_set_page_size_is_kept_with_a_warning_where_the_loader_refuses_it() {
+        let at = |line, column| Some(Location { line, column });
+        let cases = [
+            (
+                "image_flags = [\"SMALL_PAGES\"]",
+                true,
+                vec![ManifestWarning::PageSizeMismatch {
+                    address: 0x8200_0000,
+                    page_size: 0x1000,
+                    required: 0x1_0000,
+                    location: at(1, 16),
+                }],
+            ),
+            (
+                "load_address = 0x91D00000\npage_size = 0x10000",
+                false,
+                vec![ManifestWarning::PageSizeMismatch {
+                    address: 0x91D0_0000,
+                    page_size: 0x1_0000,
+                    required: 0x1000,
+                    location: at(2, 13),
+                }],
+            ),
+            (
+                "load_address = 0x91D00000\npage_size = 0x1000",
+                true,
+                vec![],
+            ),
+            (
+                "load_address = 0xA0000000",
+                false,
+                vec![ManifestWarning::LoadAddressOutsideImages {
+                    address: 0xA000_0000,
+                    location: at(1, 16),
+                }],
+            ),
+            (
+                "load_address = 0x10001000\npage_size = 0x1000",
+                true,
+                vec![ManifestWarning::LoadAddressOutsideImages {
+                    address: 0x1000_1000,
+                    location: at(1, 16),
+                }],
+            ),
+        ];
+        for (text, small, expected) in cases {
+            let (manifest, warnings) = parse_with_warnings(text).unwrap();
+            assert_eq!(
+                manifest.image_flags.contains(ImageFlags::SMALL_PAGES),
+                small,
+                "{text}"
+            );
+            assert_eq!(warnings, expected, "{text}");
+        }
     }
 
     #[test]
@@ -476,7 +606,28 @@ min_version = "2.0.1861.0"
                 ManifestErrorKind::UnalignedLoadAddress {
                     address: 0x8200_1000,
                     align: 0x1_0000,
-                    location: at(1, 16),
+                    location: Some(at(1, 16)),
+                },
+            ),
+            (
+                "load_address = 0x91D01000\npage_size = 0x10000",
+                ManifestErrorKind::UnalignedLoadAddress {
+                    address: 0x91D0_1000,
+                    align: 0x1_0000,
+                    location: Some(at(1, 16)),
+                },
+            ),
+            (
+                "page_size = 0x2000",
+                ManifestErrorKind::InvalidPageSize {
+                    page_size: 0x2000,
+                    location: at(1, 13),
+                },
+            ),
+            (
+                "image_flags = [\"SMALL_PAGES\"]\npage_size = 0x10000",
+                ManifestErrorKind::ConflictingPageSize {
+                    location: at(2, 13),
                 },
             ),
             (

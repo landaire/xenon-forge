@@ -25,7 +25,7 @@ So std for system modules records every key it allocates, and `std::os::xbox360:
 
 An entry point must not wait for a thread it started: on a development kit a module whose `ProcessAttach` waited for its new thread never finished loading, and the debug monitor stopped answering until the console restarted. `std::thread` threads get no priority or processor of their own (`threadinfo` reported priority 5). On a development kit one such thread had not started a minute after it was created, and it ran as soon as three XAM threads on its processor were suspended.
 
-Buck2 builds this variant as `xbox360//sysroot:std-system` (`std = "system"` of `xbox360_title`). With Cargo, add `"--cfg", "xbox360_system"` to the target's `rustflags`, which build-std passes to std.
+Buck2 builds this variant as `xbox360//sysroot:std-system` (`std = "system"` of `xbox360_title`). With Cargo, add `"--cfg", "xbox360_system"` to the target's `rustflags`, which build-std passes to std. A system module usually loads in 0x90000000-0x9FFFFFFF, where the console's own modules are, and gets 4 KB pages there (see the main README).
 
 ## Synchronization
 
