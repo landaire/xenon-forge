@@ -182,22 +182,35 @@ resources = {
 
 ### LLVM Fork
 
-Our [LLVM fork](https://github.com/llvm/llvm-project/compare/main...landaire-contrib:llvm-project:xbox360-abi-upstream-complete) adds a `powerpc64-unknown-xbox360` target to LLVM which implements proper PPC64-ILP32 behaviors and adds support for VMX128.
+Our [LLVM fork](https://github.com/llvm/llvm-project/compare/main...landaire-contrib:llvm-project:xbox360-abi-upstream-complete) adds the `powerpc64-unknown-xbox360` target and VMX128 support. It is optional; the default PPC32 target remains supported.
 
-This fork is not necessary to compile and run code on the console, but is a much more comprehensive and proper implementation of a PowerPC backend targeting the Xenon CPU. It still emits an ELF binary, but all behaviors of the actual LLVM codegen are better.
-
-For example, the official SDK rarely auto-vectorizes code whiel LLVM will happily do so:
+LLVM auto-vectorizes scalar loops that the SDK compiler leaves scalar:
 
 | Compiler configuration          | Kernels with generated SIMD, out of 44 |
-| ------------------------------- | -------------------------------------- |
-| SDK C compiler `/O2`            | 0                                      |
-| Clang `-O3 -mno-altivec`        | 0                                      |
-| Clang `-O3 -mno-vmx128`         | 25                                     |
-| Clang `-O3`, VMX128             | 25                                     |
-| Clang `-O3 -ffast-math`, VMX128 | 26                                     |
-| Rust `-O3`, VMX128              | 24                                     |
+| ------------------------------- | -------------------------------------: |
+| SDK C compiler `/O2`            |                                      0 |
+| Clang `-O3 -mno-altivec`        |                                      0 |
+| Clang `-O3 -mno-vmx128`         |                                     25 |
+| Clang `-O3`, VMX128             |                                     25 |
+| Clang `-O3 -ffast-math`, VMX128 |                                     26 |
+| Rust `-O3`, VMX128              |                                     24 |
 
-You can see more details about VMX128 and its performance implications here: [vmx128-measurements.md](/docs/vmx128-measurements.md)
+VMX128 has the same cost as classic AltiVec for equivalent instructions. Its dot-product instruction and larger register file provide the main gains below. Lower cycle counts are better.
+
+| Workload | Classic AltiVec | VMX128 | Speedup |
+| --- | ---: | ---: | ---: |
+| Four-component dot latency | 44.06 cycles | 14.02 cycles | 3.14x |
+| Four-component dot throughput | 5.71 cycles/dot | 1.40 cycles/dot | 4.08x |
+| 4x4 transform, 32 vs. 128 registers | 26.163 cycles/vector | 20.607 cycles/vector | 1.27x |
+
+Equivalent vector loads and stores measured the same:
+
+| Copy implementation | 16 KiB traffic | 16 MiB traffic |
+| --- | ---: | ---: |
+| Classic `lvx` / `stvx` | 26.210 GB/s | 0.341 bytes/cycle |
+| High-register `lvx128` / `stvx128` | 26.224 GB/s | 0.340 bytes/cycle |
+
+See [the full VMX128 measurements](/docs/vmx128-measurements.md) for methodology and raw results.
 
 ### Rust stdlib
 
