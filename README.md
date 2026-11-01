@@ -199,9 +199,9 @@ VMX128 has the same cost as classic AltiVec for equivalent instructions. Its dot
 
 ![VMX128 compute speedup over classic AltiVec](docs/vmx128-compute-speed.svg)
 
-Equivalent vector loads and stores measured the same:
+Vector loads improve cached copies over scalar code; large copies are memory-bound:
 
-![Classic AltiVec and VMX128 vector copy throughput](docs/vmx128-copy-speed.svg)
+![Scalar, classic AltiVec, and VMX128 copy throughput](docs/vmx128-copy-speed.svg)
 
 See [the full VMX128 measurements](/docs/vmx128-measurements.md) for methodology and raw results.
 
