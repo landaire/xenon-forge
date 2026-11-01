@@ -29,14 +29,6 @@ def profile_rustc_binary_flags():
     })
 
 
-def profile_xbox360_rustc_flags():
-    """Console overrides for the selected build mode."""
-    return select({
-        _RELEASE_NO_SYMBOLS: ["-Cdebuginfo=none", "-Cstrip=symbols"],
-        "DEFAULT": [],
-    })
-
-
 def profile_separate_debug_info():
     """Whether host executables emit an external symbol file."""
     return select({

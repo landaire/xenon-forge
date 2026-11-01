@@ -1,7 +1,7 @@
 load("//buck:xex.bzl", "xbox360_title")
 
 # VMX128 exists only on the PPC64 toolchain:
-# bin/buck2 build --target-platforms xbox360//platforms:ppc64 //src/examples/vmx128test:vmx128test
+# bin/buck2 build -m ppc64-ilp32 //src/examples/vmx128test:vmx128test
 xbox360_title(
     name = "vmx128test",
     srcs = glob(["src/**/*.rs", "src/**/*.s"]),

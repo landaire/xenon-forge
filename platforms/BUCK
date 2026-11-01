@@ -31,13 +31,27 @@ config_setting(
     visibility = ["PUBLIC"],
 )
 
+# The build mode: `-m release` (buck/modes.bzl), or by default
+# `xbox360.mode` of the root project's buckconfig, which the mode files
+# set: `buck2 build @xbox360//mode/release`.
 constraint(
     name = "mode",
-    default = "dev",
+    default = read_root_config("xbox360", "mode", "dev"),
     values = [
         "dev",
         "release",
         "release-no-symbols",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+# dev on the PPC64 ILP32 code generation, which buck/flags.bzl keeps
+# optimized until the PPC64 toolchain compiles unoptimized code.
+config_setting(
+    name = "dev-ppc64-ilp32",
+    constraint_values = [
+        ":codegen[ppc64-ilp32]",
+        ":mode[dev]",
     ],
     visibility = ["PUBLIC"],
 )
@@ -185,14 +199,5 @@ execution_platforms(
         ":host-ppc64",
         "rustc_bootstrap//platforms:execution",
     ],
-    visibility = ["PUBLIC"],
-)
-
-# The host with PPC64 code generation, for building titles directly:
-# `--target-platforms xbox360//platforms:ppc64`.
-platform(
-    name = "ppc64",
-    constraint_values = [":codegen[ppc64-ilp32]"],
-    deps = ["prelude//platforms:default"],
     visibility = ["PUBLIC"],
 )

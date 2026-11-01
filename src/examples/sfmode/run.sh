@@ -21,7 +21,7 @@ DIR='DEVKIT:\sfmode'
 mkdir -p "$OUT"
 cd "$ROOT"
 
-XEX=$(bin/buck2 build -j 8 --target-platforms xbox360//platforms:ppc64 \
+XEX=$(bin/buck2 build -j 8 -m ppc64-ilp32 \
   //src/examples/sfmode:sfmode --show-simple-output)
 
 exec 9>/var/tmp/xbox360-console.lock

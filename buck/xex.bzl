@@ -40,6 +40,7 @@ load("@prelude//rust:build_params.bzl", "MetadataKind")
 load("@prelude//rust:link_info.bzl", "RustLinkInfo", "RustProcMacroInfo", "RustProcMacroPlugin", "get_available_proc_macros")
 load("@prelude//rust:rust_toolchain.bzl", "RustToolchainInfo")
 load(":custom_toolchain.bzl", "Xbox360ClangInfo")
+load(":flags.bzl", "xbox360_c_flags")
 load(":platforms.bzl", "xbox360_core_transition", "xbox360_std_system_transition", "xbox360_std_transition")
 
 Xbox360ExecutableInfo = provider(fields = {
@@ -347,8 +348,9 @@ def _compile(ctx: AnalysisContext, src: Artifact, includes: list[Artifact], priv
             # where `main` is not mangled, so the C runtime can call it.
             [] if is_cxx else "-ffreestanding",
             "-fno-builtin",
-            # Debug information stays in the ELF that a debugger loads.
-            "-g",
+            # Optimization and debug information of the build mode. Debug
+            # information stays in the ELF that a debugger loads.
+            ctx.attrs._mode_flags,
             [cmd_args(include, format = "-I{}") for include in includes],
             _CXX_FLAGS if is_cxx else [],
             ctx.attrs.compiler_flags,
@@ -382,9 +384,11 @@ def _xbox360_c_library_impl(ctx: AnalysisContext) -> list[Provider]:
     ]
 
 _C_ATTRS = {
+    # After the flags of the build mode, so they can override them.
     "compiler_flags": attrs.list(attrs.string(), default = []),
     "cxx_compiler_flags": attrs.list(attrs.string(), default = []),
     "srcs": attrs.list(attrs.source(), default = []),
+    "_mode_flags": attrs.list(attrs.string(), default = xbox360_c_flags()),
     "_clang": attrs.toolchain_dep(
         providers = [RunInfo, Xbox360ClangInfo],
         default = "toolchains//:clang",
@@ -447,7 +451,7 @@ def _xbox360_c_title_impl(ctx: AnalysisContext) -> list[Provider]:
 # objects with --gc-sections and the GNU ld script `link_script`, by
 # default the one xex-link derives from `manifest`. `compiler_flags` apply
 # to every source, `cxx_compiler_flags` only to C++ sources (.cc, .cpp,
-# .cxx). `deps` are
+# .cxx); they follow the flags of the build mode. `deps` are
 # `xbox360_c_library` targets: a title lists `xbox360//src/sdk:crt`, which
 # defines `_start` and calls `main`, and brings the Xbox 360 headers and
 # import thunks; a DLL lists `xbox360//src/sdk:crt-dll`, which calls

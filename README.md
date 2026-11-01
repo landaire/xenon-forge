@@ -63,6 +63,32 @@ On Windows:
 bin/buck2.cmd build //src/examples/hello:hello --show-output
 ```
 
+### Build modes and code generation
+
+Builds are in `dev` mode by default: C and C++ compile with `-O0 -g` and console Rust with `-Copt-level=0`. `release` optimizes (`-O2`, `-Copt-level=z`) and keeps debug information in the ELF; `release-no-symbols` drops it. The standard library crates are optimized in every mode. Select a mode with a mode file, which needs no setup:
+
+```
+bin/buck2 build @xbox360//mode/release //src/examples/hello:hello
+```
+
+or with a modifier, which also selects the PPC64-ILP32 code generation (`-m ppc64-ilp32`):
+
+```
+bin/buck2 build -m release -m ppc64-ilp32 //src/examples/hello:hello
+```
+
+A project that uses this repository as a cell enables the modifiers in its root `PACKAGE` file:
+
+```starlark
+load("@xbox360//buck:modes.bzl", "xbox360_modifiers")
+
+xbox360_modifiers()
+```
+
+### C and C++
+
+C and C++ titles are `xbox360_c_title` targets with `//src/sdk:crt` in `deps` and `int main(int argc, char **argv)`; DLLs use `//src/sdk:crt-dll` and `DllMain`. `compiler_flags` add to the flags of the mode. Titles get the link script that xex-link derives from their `xex.toml` unless they set `link_script`. See [`src/examples/chello`](/src/examples/chello).
+
 ### Advanced Usage
 
 You can set some settings in your `.buckconfig.local` file (create it if it doesn't exist) that allow for advanced build steps:

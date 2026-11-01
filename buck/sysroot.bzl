@@ -12,6 +12,8 @@ load("//sysroot:crates.bzl", "SYSROOT_CRATES")
 _RUSTC_FLAGS = [
     "-Zforce-unstable-if-unmarked",
     "--cap-lints=allow",
+    # Optimized in every build mode, as in the Rust release.
+    "-Copt-level=" + XBOX360_OPT_LEVEL,
 ]
 
 def _sysroot_debug_info():

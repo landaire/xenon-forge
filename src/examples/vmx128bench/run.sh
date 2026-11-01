@@ -22,7 +22,7 @@ DIR='DEVKIT:\vmx128bench'
 mkdir -p "$OUT"
 cd "$ROOT"
 
-XEX=$(bin/buck2 build -j "${JOBS:-8}" --target-platforms xbox360//platforms:ppc64 \
+XEX=$(bin/buck2 build -j "${JOBS:-8}" -m ppc64-ilp32 \
   //src/examples/vmx128bench:vmx128bench --show-simple-output)
 
 exec 9>/var/tmp/xbox360-console.lock

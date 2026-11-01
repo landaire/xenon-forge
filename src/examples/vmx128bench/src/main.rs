@@ -893,6 +893,13 @@ fn main_body() {
     println!("vmx128bench: done, {failures} failures");
 }
 
+/// core's `panic_bounds_check` under the stable name that the Rust kernels
+/// of `src/ext` call (see `cmp/fixup.py`).
+#[unsafe(no_mangle)]
+extern "C" fn __vmx128bench_panic_bounds_check(index: usize, len: usize, _location: *const ()) -> ! {
+    panic!("index out of bounds: the len is {len} but the index is {index}")
+}
+
 xbox360::sys::bridged!(#[unsafe(no_mangle)] pub _start, main);
 
 extern "C" fn main(_context: u32) -> u32 {

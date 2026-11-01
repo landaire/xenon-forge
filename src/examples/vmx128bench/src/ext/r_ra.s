@@ -2813,7 +2813,7 @@ ra_k_max_f32:
 	la 5, .Lra__MergedGlobals@l(3)
 	li 3, 0
 	li 4, 0
-	bl _RNvNtCsedlPyG8v7DD_4core9panicking18panic_bounds_check
+	bl __vmx128bench_panic_bounds_check
 .Lra_func_end26:
 	.size	ra_k_max_f32, .Lra_func_end26-.Lra_func_begin26
 

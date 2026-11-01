@@ -1,0 +1,6 @@
+load("//buck:modes.bzl", "xbox360_modifiers")
+
+# Modifiers for builds of this repository. buck2 accepts the configuration
+# constructor only in the root PACKAGE of the root project, so a project
+# that uses this cell calls xbox360_modifiers() from its own.
+xbox360_modifiers() if read_root_config("xbox360", "cfg_constructor", "false") == "true" else None

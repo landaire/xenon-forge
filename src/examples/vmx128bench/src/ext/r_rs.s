@@ -939,7 +939,7 @@ rs_k_max_f32:
 	la 5, .Lrs__MergedGlobals@l(3)
 	li 3, 0
 	li 4, 0
-	bl _RNvNtCsedlPyG8v7DD_4core9panicking18panic_bounds_check
+	bl __vmx128bench_panic_bounds_check
 .Lrs_func_end26:
 	.size	rs_k_max_f32, .Lrs_func_end26-.Lrs_func_begin26
 

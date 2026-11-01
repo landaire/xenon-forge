@@ -31,3 +31,9 @@
 
 [project]
   ignore = .git, .jj, .tools, target, .rustsrc-backup
+
+# Builds of this repository itself. A project that uses this cell sets
+# `xbox360.mode` itself (or uses the mode files) and calls
+# xbox360_modifiers() from its own root PACKAGE (buck/modes.bzl).
+[xbox360]
+  cfg_constructor = true

@@ -151,11 +151,11 @@ jobs:
         run: |
           rust_dist=$(bin/buck2 build -j 2 \
             -c xbox360.toolchain_jobs=2 \
-            --target-platforms xbox360//platforms:ppc64 \
+            -m ppc64-ilp32 \
             toolchains//:rust-ppc64 --show-simple-output)
           llvm_dist=$(bin/buck2 build -j 2 \
             -c xbox360.toolchain_jobs=2 \
-            --target-platforms xbox360//platforms:ppc64 \
+            -m ppc64-ilp32 \
             toolchains//:llvm-ppc64 --show-simple-output)
           echo "rust_dist=$(realpath "$rust_dist")" >> "$GITHUB_OUTPUT"
           echo "llvm_dist=$(realpath "$llvm_dist")" >> "$GITHUB_OUTPUT"

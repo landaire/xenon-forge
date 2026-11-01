@@ -3874,9 +3874,12 @@ mod xbox360_prot;
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 unsafe fn atomic_store<T: Copy>(dst: *mut T, val: T, order: Ordering) {
     // A 32-bit target has no 64-bit atomic store instruction in LLVM's view;
-    // the CPU's `std` is one. A full barrier covers every ordering.
+    // the CPU's `std` is one. A full barrier covers every ordering. The
+    // condition is a constant, so that code generation leaves out the
+    // intrinsic, which LLVM would lower to `__atomic_store_8`, also without
+    // optimizations.
     #[cfg(target_os = "xbox360")]
-    if crate::mem::size_of::<T>() == 8 {
+    if const { crate::mem::size_of::<T>() == 8 } {
         unsafe {
             fence(SeqCst);
             xbox360_prot::store_doubleword(dst as *mut u64, crate::mem::transmute_copy(&val));
@@ -3901,7 +3904,7 @@ unsafe fn atomic_store<T: Copy>(dst: *mut T, val: T, order: Ordering) {
 unsafe fn atomic_load<T: Copy>(dst: *const T, order: Ordering) -> T {
     // As `atomic_store`: one `ld`, with a full barrier for every ordering.
     #[cfg(target_os = "xbox360")]
-    if crate::mem::size_of::<T>() == 8 {
+    if const { crate::mem::size_of::<T>() == 8 } {
         unsafe {
             fence(SeqCst);
             let value = xbox360_prot::load_doubleword(dst as *const u64);

@@ -54,7 +54,7 @@ genrule(
     ]
 ]
 
-# Build with --target-platforms xbox360//platforms:ppc64.
+# Build with -m ppc64-ilp32.
 xbox360_title(
     name = "vmx128bench",
     srcs = glob(["src/**/*.rs", "src/**/*.s"]),

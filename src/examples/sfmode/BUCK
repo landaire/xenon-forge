@@ -1,6 +1,6 @@
 load("//buck:xex.bzl", "xbox360_title")
 
-# Build with --target-platforms xbox360//platforms:ppc64.
+# Build with -m ppc64-ilp32.
 xbox360_title(
     name = "sfmode",
     srcs = glob(["src/**/*.rs"]),

@@ -10,7 +10,7 @@ load("@prelude//toolchains:python.bzl", "remote_python_toolchain")
 load("@prelude//toolchains:remote_test_execution.bzl", "remote_test_execution_toolchain")
 load(":custom_toolchain.bzl", "bootstrap_dist", "path_clang", "prebuilt_toolchain_archive", "xbox360_clang")
 load(":cxx.bzl", "host_cxx_tools", "linker_override_toolchain", "rust_lld")
-load(":flags.bzl", "XBOX360_RUSTC_FLAGS")
+load(":flags.bzl", _mode_rustc_flags = "xbox360_rustc_flags")
 load(":nightly_toolchain.bzl", "DEFAULT_PPC64_TOOLCHAIN", "NIGHTLY_TOOLCHAIN")
 load(":python.bzl", "exec_python_bootstrap_toolchain")
 load(":rust.bzl", "release_tool", "rust_release", "rust_release_toolchain")
@@ -207,7 +207,7 @@ def xbox360_toolchains(
         }),
         rustc_flags = select({
             # Custom target specifications are unstable.
-            _XBOX360: ["-Zunstable-options"] + XBOX360_RUSTC_FLAGS + xbox360_rustc_flags,
+            _XBOX360: ["-Zunstable-options"] + _mode_rustc_flags() + xbox360_rustc_flags,
             # The host linker driver runs with `-fuse-ld=lld`. The Rust
             # release ships that lld; the source-built compiler finds the
             # one of its LLVM.
