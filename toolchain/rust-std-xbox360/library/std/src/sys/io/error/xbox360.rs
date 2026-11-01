@@ -42,6 +42,7 @@ mod status {
     pub const UNSUCCESSFUL: u32 = 0xc000_0001;
     pub const NOT_IMPLEMENTED: u32 = 0xc000_0002;
     pub const INVALID_INFO_CLASS: u32 = 0xc000_0003;
+    pub const INFO_LENGTH_MISMATCH: u32 = 0xc000_0004;
     pub const ACCESS_VIOLATION: u32 = 0xc000_0005;
     pub const INVALID_HANDLE: u32 = 0xc000_0008;
     pub const INVALID_PARAMETER: u32 = 0xc000_000d;
@@ -112,6 +113,7 @@ fn status_text(code: u32) -> Option<&'static str> {
         status::UNSUCCESSFUL => "unsuccessful",
         status::NOT_IMPLEMENTED => "not implemented",
         status::INVALID_INFO_CLASS => "invalid information class",
+        status::INFO_LENGTH_MISMATCH => "information length mismatch",
         status::ACCESS_VIOLATION => "access violation",
         status::INVALID_HANDLE => "invalid handle",
         status::INVALID_PARAMETER => "invalid parameter",
@@ -174,6 +176,9 @@ mod win32 {
     pub const WSAEINVAL: u32 = 10022;
     pub const WSAEMFILE: u32 = 10024;
     pub const WSAEWOULDBLOCK: u32 = 10035;
+    pub const WSAEINPROGRESS: u32 = 10036;
+    pub const WSAENOPROTOOPT: u32 = 10042;
+    pub const WSAEOPNOTSUPP: u32 = 10045;
     pub const WSAEADDRINUSE: u32 = 10048;
     pub const WSAEADDRNOTAVAIL: u32 = 10049;
     pub const WSAENETDOWN: u32 = 10050;
@@ -193,7 +198,10 @@ fn win32_error_kind(code: u32) -> ErrorKind {
         win32::ACCESS_DENIED | win32::WSAEACCES => ErrorKind::PermissionDenied,
         win32::NOT_ENOUGH_MEMORY | win32::OUTOFMEMORY => ErrorKind::OutOfMemory,
         win32::NOT_SAME_DEVICE => ErrorKind::CrossesDevices,
-        win32::NOT_SUPPORTED | win32::CALL_NOT_IMPLEMENTED => ErrorKind::Unsupported,
+        win32::NOT_SUPPORTED
+        | win32::CALL_NOT_IMPLEMENTED
+        | win32::WSAENOPROTOOPT
+        | win32::WSAEOPNOTSUPP => ErrorKind::Unsupported,
         win32::FILE_EXISTS | win32::ALREADY_EXISTS => ErrorKind::AlreadyExists,
         win32::INVALID_PARAMETER | win32::WSAEINVAL => ErrorKind::InvalidInput,
         win32::DISK_FULL => ErrorKind::StorageFull,
@@ -244,6 +252,9 @@ fn win32_error_text(code: u32) -> Option<&'static str> {
         win32::WSAEINVAL => "invalid socket argument",
         win32::WSAEMFILE => "too many open sockets",
         win32::WSAEWOULDBLOCK => "operation would block",
+        win32::WSAEINPROGRESS => "operation in progress",
+        win32::WSAENOPROTOOPT => "socket option not supported",
+        win32::WSAEOPNOTSUPP => "socket operation not supported",
         win32::WSAEADDRINUSE => "address in use",
         win32::WSAEADDRNOTAVAIL => "address not available",
         win32::WSAENETDOWN => "network down",

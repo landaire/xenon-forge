@@ -90,10 +90,28 @@ impl SystemTime {
         let mut t: u64 = 0;
         // SAFETY: `t` is a live local.
         unsafe { xboxkrnl::KeQuerySystemTime(&mut t) };
-        let unix = t.saturating_sub(EPOCH_DIFF_100NS);
+        SystemTime::from_filetime(t)
+    }
+
+    /// The time of a FILETIME, 100 ns ticks since 1601-01-01. A time before
+    /// the Unix epoch saturates to it.
+    pub(crate) fn from_filetime(filetime: u64) -> SystemTime {
+        let unix = filetime.saturating_sub(EPOCH_DIFF_100NS);
         let secs = unix / 10_000_000;
         let nanos = ((unix % 10_000_000) * 100) as u32;
         SystemTime(Duration::new(secs, nanos))
+    }
+
+    /// The FILETIME of this time, rounded down to 100 ns. `None` beyond the
+    /// range of a FILETIME, which the kernel reads as a signed value.
+    pub(crate) fn to_filetime(&self) -> Option<u64> {
+        let ticks = self
+            .0
+            .as_secs()
+            .checked_mul(10_000_000)?
+            .checked_add(u64::from(self.0.subsec_nanos() / 100))?
+            .checked_add(EPOCH_DIFF_100NS)?;
+        (ticks <= i64::MAX as u64).then_some(ticks)
     }
 
     pub fn sub_time(&self, other: &SystemTime) -> Result<Duration, Duration> {

@@ -1,0 +1,16 @@
+[package]
+name = "stdcheck"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "stdcheck"
+path = "src/main.rs"
+
+[profile.release]
+panic = "abort"
+debug = "full"
+opt-level = "s"
+
+[dependencies]
+xbox360 = { path = "../../crates/xbox360" }

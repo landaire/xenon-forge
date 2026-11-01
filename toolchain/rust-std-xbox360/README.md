@@ -2,7 +2,7 @@
 
 An overlay that teaches Rust std (1.98 rust-src) about the `xbox360` target OS, so `-Zbuild-std=std,panic_abort` produces a working std for the Xbox 360 devkit.
 
-std built with this overlay runs on real hardware: allocator, `println!` (DbgPrint), `Instant`/`SystemTime`, TCP/UDP over NetDll, `std::thread`, `Mutex`/`Condvar`/`RwLock`/`Once`/parking, kernel-TLS `thread_local`, and `std::fs` over the NT file API.
+std built with this overlay runs on real hardware: allocator, `println!` (DbgPrint), `Instant`/`SystemTime`, `std::net` TCP/UDP over NetDll, `std::thread`, `Mutex`/`Condvar`/`RwLock`/`Once`/parking, kernel-TLS `thread_local`, `std::fs` over the NT file API, `std::path` with `\` separators, command-line arguments, and random hash keys from `XeCryptRandom`. `src/examples/stdcheck/run.sh` checks the file system, path, network and random backends on a development kit.
 
 ## Kernel and XAM calls
 
@@ -17,6 +17,7 @@ A title needs a XEX TLS_INFO header with a nonzero slot count. Without it the ke
 std built with `--cfg xbox360_system` is the standard library of system modules, which run in the system process:
 - `ExCreateThread` gets `SYSTEM_PROCESS`. Without that flag the kernel starts a thread in the title process, whichever process the creator is in, and ends it when the title exits.
 - Sockets open as `XnCaller::SystemApp` instead of `XnCaller::Title`, so they do not belong to the running title. `XNET_STARTUP_BYPASS_SECURITY` does not cover them. On a development kit their datagrams were accepted and never sent. Each socket that `socket()` opens therefore gets SOL_SOCKET option 0x5801, after which UDP and TCP to ordinary hosts work. Connections that a marked listener accepts worked without the option.
+- A system UDP socket receives datagrams sent to a broadcast address only after `set_broadcast(true)` (SO_BROADCAST). On a development kit a title socket received them without it.
 
 TLS keys come from `KeTlsAlloc` in both builds. The system process has no TLS_INFO header to size it. On a development kit, 29 of its slots were free after a boot, and each load of a module that uses `std::thread` and `println!` took 5. The kernel returns slots only through `KeTlsFree`, and the system process never exits. When the slots run out, `KeTlsAlloc` fails and std aborts with "out of TLS keys", which stopped the console with a crash dump.
 
@@ -59,6 +60,25 @@ Key constraints: mtmsrd(disable) immediately before lwarx, the restore immediate
 
 `max-atomic-width` is 64. The CPU is 64-bit running 32-bit code, so 8-byte compare-and-swap and read-modify-write use the same protected form with `ldarx`/`stdcx.`, the values joined from and split into 32-bit register halves around the reservation. 8-byte atomic loads and stores are one aligned `ld` or `std` (single-copy atomic) between full barriers; `atomic_load`/`atomic_store` route size 8 there because LLVM would otherwise call `__atomic_load_8`/`__atomic_store_8` on a 32-bit target. `src/examples/atomics64` checks the operations and four threads adding across the 32-bit halves on a development kit.
 
+## File system
+
+Paths are kernel object names (`\Device\Harddisk0\Partition1\DEVKIT\file.txt`) or drive paths (`game:\file.txt`), which std opens as `\??\game:\file.txt`. Both are absolute in `std::path`. The kernel rejects `/` in a name with `STATUS_OBJECT_NAME_INVALID`, so `\` is the main separator, and std passes a `/` separator to the kernel as `\`. `std::path::absolute` fails for a relative path: there is no current directory.
+
+Files are opened for synchronous I/O and share reading, writing and deletion, as on Windows. The kernel keeps the file position, which `try_clone` (XAM `DuplicateHandle`) shares. The behavior of FATX on a development kit that the backend works around:
+- `FileBasicInformation` and `FileStandardInformation` queries fail; metadata comes from `FileNetworkOpenInformation` and `NtQueryFullAttributesFile`.
+- A handle opened with `FILE_APPEND_DATA` alone writes at the file position. Writes of a file opened for appending pass `FILE_WRITE_TO_END_OF_FILE` as the offset instead.
+- A file grown with `FileEndOfFileInformation` keeps the old contents of its clusters, so `set_len` writes zeros over the grown part.
+- The read-only attribute is accepted and dropped. `set_permissions` that sets it fails with `Unsupported`.
+- `NtQueryDirectoryFile` returns one entry per call, no `.` or `..`, and `STATUS_NO_SUCH_FILE` for an empty directory.
+
+There are no links, file locks or `canonicalize`; they fail with `Unsupported`.
+
+## Networking
+
+Sockets are IPv4 only and `lookup_host` parses numeric addresses only. Options of the `SOL_SOCKET` and `IPPROTO_TCP` levels work: read and write timeouts, `nodelay`, `linger`, `broadcast`. The `IPPROTO_IP` options (TTL, multicast) and `take_error` fail with `Unsupported`: `xbox360-sys` names no `IPPROTO_IP` level, and the stack rejects `SO_ERROR` with `WSAENOPROTOOPT`. `connect_timeout` selects on a non-blocking connect; a connection to a closed port puts the socket in the error set, which std reports as `ConnectionRefused`. `local_addr` of a socket that was not bound to an address reads 0.0.0.0.
+
+Binding a loopback address stopped a development kit in an assertion of the network stack, so std rejects loopback addresses with `AddrNotAvailable`.
+
 ## Layout
 
 Backend files, under `library/`:
@@ -71,7 +91,9 @@ Backend files, under `library/`:
 - `std/src/sys/thread/xbox360.rs` - threads over ExCreateThread
 - `std/src/sys/thread_local/key/xbox360.rs` - TLS keys over KeTls*, and their release for system modules
 - `std/src/os/mod.rs` and `std/src/os/xbox360/mod.rs` - `std::os::xbox360`
-- `std/src/sys/fs/xbox360.rs` - files over the NT file API
+- `std/src/sys/fs/xbox360.rs` - files and directories over the NT file API
+- `std/src/sys/path/xbox360.rs` - `\` separators, and absolute object names and drive paths
+- `std/src/sys/random/xbox360.rs` - random bytes from XeCryptRandom
 - `std/src/sys/io/error/xbox360.rs` - error kinds and messages of kernel statuses and Win32/Winsock errors
 - `std/src/sys/net/connection/xbox360.rs` - TcpStream/TcpListener/UdpSocket over NetDll winsock
 - `core/src/sync/atomic_xbox360.rs` - protected lwarx/stwcx atomics
