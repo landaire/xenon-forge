@@ -75,7 +75,7 @@ There are no links, file locks or `canonicalize`; they fail with `Unsupported`.
 
 ## Networking
 
-Sockets are IPv4 only and `lookup_host` parses numeric addresses only. Options of the `SOL_SOCKET` and `IPPROTO_TCP` levels work: read and write timeouts, `nodelay`, `linger`, `broadcast`. The `IPPROTO_IP` options (TTL, multicast) and `take_error` fail with `Unsupported`: `xbox360-sys` names no `IPPROTO_IP` level, and the stack rejects `SO_ERROR` with `WSAENOPROTOOPT`. `connect_timeout` selects on a non-blocking connect; a connection to a closed port puts the socket in the error set, which std reports as `ConnectionRefused`. `local_addr` of a socket that was not bound to an address reads 0.0.0.0.
+Sockets are IPv4 only and `lookup_host` parses numeric addresses only. Options of the `SOL_SOCKET` and `IPPROTO_TCP` levels work: read and write timeouts, `nodelay`, `linger`, `broadcast`. The `IPPROTO_IP` options (TTL, multicast) and `take_error` fail with `Unsupported`: the vendored `xbox360-sys` 0.1.0 names no `IPPROTO_IP` level, and the stack rejects `SO_ERROR` with `WSAENOPROTOOPT`. The console has TTL and multicast membership; std can use them once it moves to an `xbox360-sys` release that has `SocketLevel::Ip`. `connect_timeout` selects on a non-blocking connect; a connection to a closed port puts the socket in the error set, which std reports as `ConnectionRefused`. `local_addr` of a socket that was not bound to an address reads 0.0.0.0.
 
 Binding a loopback address stopped a development kit in an assertion of the network stack, so std rejects loopback addresses with `AddrNotAvailable`.
 

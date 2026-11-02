@@ -72,18 +72,23 @@ value_enum! {
     pub enum SocketLevel: i32 {
         /// `SOL_SOCKET`.
         Socket = 0xffff,
+        /// `IPPROTO_IP`.
+        Ip = 0,
         /// `IPPROTO_TCP`.
         Tcp = 6,
     }
 }
 
-/// A socket option. The numbers of different levels overlap.
+/// A socket option. The numbers of different levels overlap. Names that
+/// are not Winsock's are this crate's; the console's own are unknown.
 #[repr(transparent)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SocketOption(pub i32);
 
+/// Level [`SocketLevel::Socket`].
 impl SocketOption {
     pub const SO_REUSEADDR: Self = Self(0x4);
+    /// The console rejects it with `WSAENOPROTOOPT`.
     pub const SO_KEEPALIVE: Self = Self(0x8);
     pub const SO_BROADCAST: Self = Self(0x20);
     pub const SO_LINGER: Self = Self(0x80);
@@ -91,10 +96,55 @@ impl SocketOption {
     pub const SO_RCVBUF: Self = Self(0x1002);
     pub const SO_SNDTIMEO: Self = Self(0x1005);
     pub const SO_RCVTIMEO: Self = Self(0x1006);
+    /// The console rejects it with `WSAENOPROTOOPT`.
     pub const SO_ERROR: Self = Self(0x1007);
     pub const SO_TYPE: Self = Self(0x1008);
-    /// Level [`SocketLevel::Tcp`].
+    /// Can only be set.
+    pub const SO_DONTLINGER: Self = Self(!0x80);
+    /// Can only be set.
+    pub const SO_EXCLUSIVEADDRUSE: Self = Self(!0x4);
+    /// Marks the socket insecure: its traffic bypasses XNet security. A
+    /// title needs the `XEX_SYSTEM_INSECURE_SOCKETS` privilege, or setting
+    /// it fails with `WSAEACCES`.
+    pub const SO_INSECURE: Self = Self(0x5801);
+    /// Limits the socket to the local network: `connect` and `sendto` fail
+    /// with `WSAEHOSTUNREACH` for an address that is not private (10/8,
+    /// 172.16/12, 192.168/16), on the console's subnet, loopback, broadcast
+    /// or multicast.
+    pub const SO_LAN_ONLY: Self = Self(0x5802);
+}
+
+/// Level [`SocketLevel::Tcp`], for a TCP socket. The MSS values are 88 to
+/// 1460.
+impl SocketOption {
     pub const TCP_NODELAY: Self = Self(0x1);
+    /// The peer's receive window, scaled. Can only be read.
+    pub const TCP_SEND_WINDOW: Self = Self(0x5802);
+    /// The segment size of sends: 512 until the connection is established,
+    /// then the peer's MSS, at most [`Self::TCP_LOCAL_MSS`].
+    pub const TCP_SEND_MSS: Self = Self(0x5803);
+    /// The MSS that the socket announces and the most it sends. Unless set,
+    /// the connection picks 1460 for an address on the console's subnet,
+    /// 1324 for another, and 1264 for an XNet secure address.
+    pub const TCP_LOCAL_MSS: Self = Self(0x5804);
+    /// Nonzero offers selective acknowledgments (RFC 2018), which the
+    /// connection uses if the peer permits them. Can only be set.
+    pub const TCP_SACK: Self = Self(0x5805);
+}
+
+/// Level [`SocketLevel::Ip`].
+impl SocketOption {
+    /// Joins a multicast group: the value is the group address (the start
+    /// of an `ip_mreq`). The socket must be bound and not TCP; it joins at
+    /// most four groups. Can only be set.
+    pub const IP_ADD_MEMBERSHIP: Self = Self(5);
+    /// Leaves a multicast group that [`Self::IP_ADD_MEMBERSHIP`] joined.
+    /// Can only be set.
+    pub const IP_DROP_MEMBERSHIP: Self = Self(6);
+    /// The time to live of sent packets, 1 to 255; 64 by default.
+    pub const IP_TTL: Self = Self(7);
+    /// The DSCP of sent packets: one byte, 0 to 63.
+    pub const IP_DSCP: Self = Self(0x64);
 }
 
 flags! {

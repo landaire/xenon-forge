@@ -42,6 +42,9 @@ typedef ULONG SOCKET, *PSOCKET;
 #define IPPROTO_TCP 6
 #define IPPROTO_UDP 17
 
+/* Option level of IP options. */
+#define IPPROTO_IP 0
+
 /* What NetDll_shutdown disables. */
 #define SD_RECEIVE 0
 #define SD_SEND    1
@@ -56,20 +59,62 @@ typedef ULONG SOCKET, *PSOCKET;
 /* Option level of socket options. */
 #define SOL_SOCKET 0xFFFF
 
-/* Options of level SOL_SOCKET. */
-#define SO_REUSEADDR 0x0004
-#define SO_KEEPALIVE 0x0008
-#define SO_BROADCAST 0x0020
-#define SO_LINGER    0x0080
-#define SO_SNDBUF    0x1001
-#define SO_RCVBUF    0x1002
-#define SO_SNDTIMEO  0x1005
-#define SO_RCVTIMEO  0x1006
-#define SO_ERROR     0x1007
-#define SO_TYPE      0x1008
+/* Options of level SOL_SOCKET. The console rejects SO_KEEPALIVE and
+   SO_ERROR with WSAENOPROTOOPT. SO_DONTLINGER and SO_EXCLUSIVEADDRUSE can
+   only be set. */
+#define SO_REUSEADDR        0x0004
+#define SO_KEEPALIVE        0x0008
+#define SO_BROADCAST        0x0020
+#define SO_LINGER           0x0080
+#define SO_SNDBUF           0x1001
+#define SO_RCVBUF           0x1002
+#define SO_SNDTIMEO         0x1005
+#define SO_RCVTIMEO         0x1006
+#define SO_ERROR            0x1007
+#define SO_TYPE             0x1008
+#define SO_DONTLINGER       (~SO_LINGER)
+#define SO_EXCLUSIVEADDRUSE (~SO_REUSEADDR)
+
+/* Options of the console only. Their names are this SDK's; the official ones
+   are unknown. */
+
+/* Level SOL_SOCKET. */
+/* Marks the socket insecure: its traffic bypasses XNet security. A title
+   needs the XEX_SYSTEM_INSECURE_SOCKETS privilege, or setting it fails with
+   WSAEACCES. */
+#define SO_INSECURE 0x5801
+/* Limits the socket to the local network: connect and sendto fail with
+   WSAEHOSTUNREACH for an address that is not private (10/8, 172.16/12,
+   192.168/16), on the console's subnet, loopback, broadcast or multicast. */
+#define SO_LAN_ONLY 0x5802
+
+/* Level IPPROTO_TCP. A TCP socket only; the MSS values are 88 to 1460. */
+/* The peer's receive window, scaled. Can only be read. */
+#define TCP_SEND_WINDOW 0x5802
+/* The segment size of sends: 512 until the connection is established, then
+   the peer's MSS, at most TCP_LOCAL_MSS. */
+#define TCP_SEND_MSS    0x5803
+/* The MSS that the socket announces and the most it sends. Unless set, the
+   connection picks 1460 for an address on the console's subnet, 1324 for
+   another, and 1264 for an XNet secure address. */
+#define TCP_LOCAL_MSS   0x5804
+/* Nonzero offers selective acknowledgments (RFC 2018), which the connection
+   uses if the peer permits them. Can only be set. */
+#define TCP_SACK        0x5805
+
+/* Level IPPROTO_IP. The DSCP of sent packets: one byte, 0 to 63. */
+#define IP_DSCP 0x64
 
 /* Option of level IPPROTO_TCP. */
 #define TCP_NODELAY 0x0001
+
+/* Options of level IPPROTO_IP, with their Winsock 1 numbers. IP_TTL takes 1
+   to 255. The membership options take the group address (the start of an
+   ip_mreq) on a bound socket that is not TCP, at most four groups per socket;
+   they can only be set. */
+#define IP_ADD_MEMBERSHIP  5
+#define IP_DROP_MEMBERSHIP 6
+#define IP_TTL             7
 
 /* Flags of sends and receives. */
 #define MSG_OOB       0x1
