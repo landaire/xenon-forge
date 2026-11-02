@@ -98,7 +98,7 @@ The kernel object storage types, such as `Kevent` for `Event::as_ptr`, also come
 
 The `xam` modules follow the export signatures and structure layouts of [Xenia](https://github.com/xenia-project/xenia). Each module's documentation states what was checked only against Xenia.
 
-The crate is built on [xbox360-sys](https://crates.io/crates/xbox360-sys), and re-exports it as `xbox360::sys`. Titles need [xex-link](https://github.com/landaire/rust-xbox360) to turn the import records into the XEX import table.
+The crate is built on [xbox360-sys](https://crates.io/crates/xbox360-sys), and re-exports it as `xbox360::sys`. Titles need [xex-link](https://github.com/landaire/xenon-forge) to turn the import records into the XEX import table.
 
 ## License
 

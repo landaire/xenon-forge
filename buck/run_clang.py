@@ -16,7 +16,7 @@ def main():
         raise SystemExit(
             "run_clang.py: no clang on the PATH of the buck2 daemon. C and C++ titles require "
             "clang with the PowerPC target; run `buck2 kill` after changing PATH "
-            "(see 'Compiling C and C++' in the rust-xbox360 README)."
+            "(see 'Compiling C and C++' in the Xenon Forge README)."
         )
     return subprocess.run([clang, *sys.argv[1:]]).returncode
 

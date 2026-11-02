@@ -1,4 +1,4 @@
-"""Build-mode settings shared by projects that use rust-xbox360."""
+"""Build-mode settings shared by projects that use Xenon Forge."""
 
 load("@prelude//rules.bzl", "clone_rule")
 load("@prelude//dist:dist_info.bzl", "DistInfo")

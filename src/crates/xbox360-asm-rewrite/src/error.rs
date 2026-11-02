@@ -29,7 +29,7 @@ pub enum Error {
     #[error(transparent)]
     Image(#[from] reservation::ElfError),
     #[error(
-        "{count} unprotected reservations; LLVM emits them for `core::sync::atomic` read-modify-write operations unless the standard library carries the xbox360 atomics overlay (rust-xbox360 toolchain/rust-std-xbox360)"
+        "{count} unprotected reservations; LLVM emits them for `core::sync::atomic` read-modify-write operations unless the standard library carries the xbox360 atomics overlay (xenon-forge toolchain/rust-std-xbox360)"
     )]
     Unprotected { count: usize },
     #[error("{count} functions still hold rewritable sequences")]
