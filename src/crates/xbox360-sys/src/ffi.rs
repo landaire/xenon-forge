@@ -273,6 +273,8 @@ pub const ExDmSetDvdEmulationMode: u32 = 7;
 pub const ExDmQueryDevkitStatistics: u32 = 8;
 pub const EX_LOADED_IMAGE_NAME_SIZE: u32 = 256;
 pub const EX_LOADED_COMMAND_LINE_SIZE: u32 = 512;
+pub const EX_EXPANSION_MAX_SIZE: u32 = 65536;
+pub const EX_EXPANSION_SIZE_ALIGNMENT: u32 = 128;
 pub const MEM_COMMIT: u32 = 4096;
 pub const MEM_RESERVE: u32 = 8192;
 pub const MEM_DECOMMIT: u32 = 16384;
@@ -387,13 +389,36 @@ pub const IO_NO_INCREMENT: u32 = 0;
 pub const IO_CD_ROM_INCREMENT: u32 = 1;
 pub const IO_DISK_INCREMENT: u32 = 1;
 pub const SMC_MESSAGE_LENGTH: u32 = 16;
+pub const SMC_COMMAND_QUERY_POWER_UP_CAUSE: u32 = 1;
+pub const SMC_COMMAND_QUERY_TEMPERATURES: u32 = 7;
 pub const SMC_COMMAND_I2C: u32 = 17;
+pub const SMC_COMMAND_QUERY_VERSION: u32 = 18;
 pub const SMC_COMMAND_QUERY_IR_ADDRESS: u32 = 22;
 pub const SMC_COMMAND_TRAY_STATE: u32 = 131;
+pub const SMC_COMMAND_SET_FAN_ALGORITHM: u32 = 136;
+pub const SMC_COMMAND_SET_FAN_SPEED: u32 = 137;
+pub const SMC_COMMAND_SET_POWER_LED: u32 = 140;
+pub const SMC_COMMAND_SET_FAN2_SPEED: u32 = 148;
 pub const SMC_COMMAND_SET_IR_ADDRESS: u32 = 149;
+pub const SMC_COMMAND_SET_RING_OF_LIGHT: u32 = 153;
 pub const SMC_I2C_SETTINGS_EEPROM: u32 = 212;
+pub const SMC_POWER_UP_STATUS_CONFIG_INVALID: u32 = 1;
+pub const SMC_FAN_ALGORITHM_QUIET: u32 = 1;
+pub const SMC_FAN_ALGORITHM_FULL_SPEED: u32 = 2;
+pub const SMC_FAN_SPEED_AUTOMATIC: u32 = 0;
+pub const SMC_FAN_SPEED_FIXED: u32 = 128;
+pub const SMC_FAN_SPEED_PERCENT_MASK: u32 = 127;
+pub const SMC_FAN_SPEED_MAX_PERCENT: u32 = 100;
+pub const SMC_POWER_LED_AUTOMATIC: u32 = 1;
+pub const SMC_POWER_LED_OPTION_ONE_SHOT: u32 = 1;
+pub const SMC_POWER_LED_PATTERN_FIRST: u32 = 2;
+pub const SMC_POWER_LED_PATTERN_LAST: u32 = 9;
+pub const SMC_RING_OF_LIGHT_OVERRIDE: u32 = 1;
+pub const SMC_RING_OF_LIGHT_QUADRANT_SHIFT: u32 = 4;
+pub const SMC_RING_OF_LIGHT_QUADRANT_MASK: u32 = 240;
+pub const XBOX_HW_FLAG_GENERATION_DETECTED: u32 = 4;
 pub const XBOX_HW_FLAG_HOST_BRIDGE_EBEB: u32 = 8;
-pub const XBOX_HW_FLAG_AUTO_PROFILE: u32 = 16;
+pub const XBOX_HW_FLAG_DEVKIT_KERNEL: u32 = 16;
 pub const XBOX_HW_FLAG_HDD: u32 = 32;
 pub const XBOX_HW_FLAG_KERNEL_DEBUGGER_ENABLED: u32 = 128;
 pub const XBOX_HW_FLAG_KERNEL_DEBUGGER_ATTACHED: u32 = 256;
@@ -401,8 +426,32 @@ pub const XBOX_HW_FLAG_LARGE_MEMORY: u32 = 65536;
 pub const XBOX_HW_FLAG_MMC_FLASH: u32 = 131072;
 pub const XBOX_HW_FLAG_TEST_KIT: u32 = 33554432;
 pub const XBOX_HW_GENERATION_SHIFT: u32 = 28;
+pub const XBOX_HW_GENERATION_XENON: u32 = 0;
+pub const XBOX_HW_GENERATION_ZEPHYR: u32 = 1;
+pub const XBOX_HW_GENERATION_FALCON: u32 = 2;
+pub const XBOX_HW_GENERATION_JASPER: u32 = 3;
 pub const XBOX_HW_GENERATION_TRINITY: u32 = 4;
-pub const XBOX_BOOT_FLAG_FROM_DISC: u32 = 1024;
+pub const XBOX_HW_GENERATION_CORONA: u32 = 5;
+pub const XBOX_HW_GENERATION_WINCHESTER: u32 = 6;
+pub const XBOX_HW_GENERATION_RIDGEWAY: u32 = 8;
+pub const XBOX_HW_PLATFORM_MASK: u32 = 3;
+pub const XBOX_HW_PLATFORM_ALPHA: u32 = 0;
+pub const XBOX_HW_PLATFORM_MONGREL: u32 = 1;
+pub const XBOX_HW_PLATFORM_SHIVA: u32 = 2;
+pub const XBOX_HW_PLATFORM_WATERNOOSE: u32 = 3;
+pub const XBOX_BOOT_FLAG_UNBOUND_BOOT_LOADER: u32 = 1;
+pub const XBOX_BOOT_FLAG_LOCK_FUSES_BLOWN: u32 = 2;
+pub const XBOX_BOOT_FLAG_CONSOLE_TYPE_MATCH: u32 = 4;
+pub const XBOX_BOOT_FLAG_FUSE_VERSION_MATCH: u32 = 8;
+pub const XBOX_BOOT_FLAG_CONSOLE_KEY_VALID: u32 = 16;
+pub const XBOX_BOOT_FLAG_DEVKIT_MEMORY: u32 = 128;
+pub const XBOX_BOOT_FLAG_KD_LITE_ONLY: u32 = 256;
+pub const XBOX_BOOT_FLAG_SHADOW_BOOTED: u32 = 512;
+pub const XBOX_BOOT_FLAG_CDROM_SYSTEM_ROOT: u32 = 1024;
+pub const XBOX_BOOT_FLAG_FLASH_PATCH1: u32 = 4096;
+pub const XBOX_BOOT_FLAG_FLASH_PATCH2: u32 = 8192;
+pub const XBOX_BOOT_FLAG_UPDATE_SEQUENCE_PENDING: u32 = 16384;
+pub const XBOX_BOOT_FLAG_UPDATE_SEQUENCE_PROGRAMMED: u32 = 32768;
 pub const XEX_MODULE_FLAG_TITLE: u32 = 1;
 pub const XEX_MODULE_FLAG_EXPORTS_TO_TITLE: u32 = 2;
 pub const XEX_MODULE_FLAG_SYSTEM_DEBUGGER: u32 = 4;
@@ -447,6 +496,7 @@ pub const LDR_FLAG_LOAD_IN_PROGRESS: u32 = 4096;
 pub const LDR_FLAG_UNLOAD_PENDING: u32 = 8192;
 pub const XEKEYS_KEY_CONSOLE_SERIAL_NUMBER: u32 = 20;
 pub const XE_CONSOLE_ID_SIZE: u32 = 5;
+pub const XE_CONSOLE_TYPE_KEY_3A: u32 = 2147483648;
 pub const NIC_DEVICE_EMAC: u32 = 1;
 pub const NIC_DEVICE_WIRELESS: u32 = 2;
 pub const NIC_DEVICE_KD: u32 = 16;
@@ -3365,6 +3415,264 @@ const _: () = {
 };
 pub type SMC_MESSAGE = _SMC_MESSAGE;
 pub type PSMC_MESSAGE = *mut _SMC_MESSAGE;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _SMC_POWER_UP_CAUSE_REPLY {
+    pub Command: UCHAR,
+    pub Cause: UCHAR,
+    pub Reserved1: UCHAR,
+    pub BootAttempts: UCHAR,
+    pub Status: UCHAR,
+    pub Reserved2: [UCHAR; 11usize],
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    [
+        "Size of _SMC_POWER_UP_CAUSE_REPLY",
+    ][::core::mem::size_of::<_SMC_POWER_UP_CAUSE_REPLY>() - 16usize];
+    [
+        "Alignment of _SMC_POWER_UP_CAUSE_REPLY",
+    ][::core::mem::align_of::<_SMC_POWER_UP_CAUSE_REPLY>() - 1usize];
+    [
+        "Offset of field: _SMC_POWER_UP_CAUSE_REPLY::Command",
+    ][::core::mem::offset_of!(_SMC_POWER_UP_CAUSE_REPLY, Command) - 0usize];
+    [
+        "Offset of field: _SMC_POWER_UP_CAUSE_REPLY::Cause",
+    ][::core::mem::offset_of!(_SMC_POWER_UP_CAUSE_REPLY, Cause) - 1usize];
+    [
+        "Offset of field: _SMC_POWER_UP_CAUSE_REPLY::Reserved1",
+    ][::core::mem::offset_of!(_SMC_POWER_UP_CAUSE_REPLY, Reserved1) - 2usize];
+    [
+        "Offset of field: _SMC_POWER_UP_CAUSE_REPLY::BootAttempts",
+    ][::core::mem::offset_of!(_SMC_POWER_UP_CAUSE_REPLY, BootAttempts) - 3usize];
+    [
+        "Offset of field: _SMC_POWER_UP_CAUSE_REPLY::Status",
+    ][::core::mem::offset_of!(_SMC_POWER_UP_CAUSE_REPLY, Status) - 4usize];
+    [
+        "Offset of field: _SMC_POWER_UP_CAUSE_REPLY::Reserved2",
+    ][::core::mem::offset_of!(_SMC_POWER_UP_CAUSE_REPLY, Reserved2) - 5usize];
+};
+pub type SMC_POWER_UP_CAUSE_REPLY = _SMC_POWER_UP_CAUSE_REPLY;
+pub type PSMC_POWER_UP_CAUSE_REPLY = *mut _SMC_POWER_UP_CAUSE_REPLY;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _SMC_TEMPERATURE {
+    pub Fraction: UCHAR,
+    pub Degrees: UCHAR,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of _SMC_TEMPERATURE"][::core::mem::size_of::<_SMC_TEMPERATURE>() - 2usize];
+    [
+        "Alignment of _SMC_TEMPERATURE",
+    ][::core::mem::align_of::<_SMC_TEMPERATURE>() - 1usize];
+    [
+        "Offset of field: _SMC_TEMPERATURE::Fraction",
+    ][::core::mem::offset_of!(_SMC_TEMPERATURE, Fraction) - 0usize];
+    [
+        "Offset of field: _SMC_TEMPERATURE::Degrees",
+    ][::core::mem::offset_of!(_SMC_TEMPERATURE, Degrees) - 1usize];
+};
+pub type SMC_TEMPERATURE = _SMC_TEMPERATURE;
+pub type PSMC_TEMPERATURE = *mut _SMC_TEMPERATURE;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _SMC_TEMPERATURES_REPLY {
+    pub Command: UCHAR,
+    pub Temperature0: SMC_TEMPERATURE,
+    pub Temperature1: SMC_TEMPERATURE,
+    pub EdramTemperature: SMC_TEMPERATURE,
+    pub Temperature3: SMC_TEMPERATURE,
+    pub FanSpeed: UCHAR,
+    pub Reserved: [UCHAR; 6usize],
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    [
+        "Size of _SMC_TEMPERATURES_REPLY",
+    ][::core::mem::size_of::<_SMC_TEMPERATURES_REPLY>() - 16usize];
+    [
+        "Alignment of _SMC_TEMPERATURES_REPLY",
+    ][::core::mem::align_of::<_SMC_TEMPERATURES_REPLY>() - 1usize];
+    [
+        "Offset of field: _SMC_TEMPERATURES_REPLY::Command",
+    ][::core::mem::offset_of!(_SMC_TEMPERATURES_REPLY, Command) - 0usize];
+    [
+        "Offset of field: _SMC_TEMPERATURES_REPLY::Temperature0",
+    ][::core::mem::offset_of!(_SMC_TEMPERATURES_REPLY, Temperature0) - 1usize];
+    [
+        "Offset of field: _SMC_TEMPERATURES_REPLY::Temperature1",
+    ][::core::mem::offset_of!(_SMC_TEMPERATURES_REPLY, Temperature1) - 3usize];
+    [
+        "Offset of field: _SMC_TEMPERATURES_REPLY::EdramTemperature",
+    ][::core::mem::offset_of!(_SMC_TEMPERATURES_REPLY, EdramTemperature) - 5usize];
+    [
+        "Offset of field: _SMC_TEMPERATURES_REPLY::Temperature3",
+    ][::core::mem::offset_of!(_SMC_TEMPERATURES_REPLY, Temperature3) - 7usize];
+    [
+        "Offset of field: _SMC_TEMPERATURES_REPLY::FanSpeed",
+    ][::core::mem::offset_of!(_SMC_TEMPERATURES_REPLY, FanSpeed) - 9usize];
+    [
+        "Offset of field: _SMC_TEMPERATURES_REPLY::Reserved",
+    ][::core::mem::offset_of!(_SMC_TEMPERATURES_REPLY, Reserved) - 10usize];
+};
+pub type SMC_TEMPERATURES_REPLY = _SMC_TEMPERATURES_REPLY;
+pub type PSMC_TEMPERATURES_REPLY = *mut _SMC_TEMPERATURES_REPLY;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _SMC_VERSION_REPLY {
+    pub Command: UCHAR,
+    pub Version: [UCHAR; 3usize],
+    pub BootCause0: UCHAR,
+    pub BootCause1: UCHAR,
+    pub PowerButtonPresses: UCHAR,
+    pub Reserved: [UCHAR; 9usize],
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    [
+        "Size of _SMC_VERSION_REPLY",
+    ][::core::mem::size_of::<_SMC_VERSION_REPLY>() - 16usize];
+    [
+        "Alignment of _SMC_VERSION_REPLY",
+    ][::core::mem::align_of::<_SMC_VERSION_REPLY>() - 1usize];
+    [
+        "Offset of field: _SMC_VERSION_REPLY::Command",
+    ][::core::mem::offset_of!(_SMC_VERSION_REPLY, Command) - 0usize];
+    [
+        "Offset of field: _SMC_VERSION_REPLY::Version",
+    ][::core::mem::offset_of!(_SMC_VERSION_REPLY, Version) - 1usize];
+    [
+        "Offset of field: _SMC_VERSION_REPLY::BootCause0",
+    ][::core::mem::offset_of!(_SMC_VERSION_REPLY, BootCause0) - 4usize];
+    [
+        "Offset of field: _SMC_VERSION_REPLY::BootCause1",
+    ][::core::mem::offset_of!(_SMC_VERSION_REPLY, BootCause1) - 5usize];
+    [
+        "Offset of field: _SMC_VERSION_REPLY::PowerButtonPresses",
+    ][::core::mem::offset_of!(_SMC_VERSION_REPLY, PowerButtonPresses) - 6usize];
+    [
+        "Offset of field: _SMC_VERSION_REPLY::Reserved",
+    ][::core::mem::offset_of!(_SMC_VERSION_REPLY, Reserved) - 7usize];
+};
+pub type SMC_VERSION_REPLY = _SMC_VERSION_REPLY;
+pub type PSMC_VERSION_REPLY = *mut _SMC_VERSION_REPLY;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _SMC_FAN_ALGORITHM_REQUEST {
+    pub Command: UCHAR,
+    pub Algorithm: UCHAR,
+    pub Reserved: [UCHAR; 14usize],
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    [
+        "Size of _SMC_FAN_ALGORITHM_REQUEST",
+    ][::core::mem::size_of::<_SMC_FAN_ALGORITHM_REQUEST>() - 16usize];
+    [
+        "Alignment of _SMC_FAN_ALGORITHM_REQUEST",
+    ][::core::mem::align_of::<_SMC_FAN_ALGORITHM_REQUEST>() - 1usize];
+    [
+        "Offset of field: _SMC_FAN_ALGORITHM_REQUEST::Command",
+    ][::core::mem::offset_of!(_SMC_FAN_ALGORITHM_REQUEST, Command) - 0usize];
+    [
+        "Offset of field: _SMC_FAN_ALGORITHM_REQUEST::Algorithm",
+    ][::core::mem::offset_of!(_SMC_FAN_ALGORITHM_REQUEST, Algorithm) - 1usize];
+    [
+        "Offset of field: _SMC_FAN_ALGORITHM_REQUEST::Reserved",
+    ][::core::mem::offset_of!(_SMC_FAN_ALGORITHM_REQUEST, Reserved) - 2usize];
+};
+pub type SMC_FAN_ALGORITHM_REQUEST = _SMC_FAN_ALGORITHM_REQUEST;
+pub type PSMC_FAN_ALGORITHM_REQUEST = *mut _SMC_FAN_ALGORITHM_REQUEST;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _SMC_FAN_SPEED_REQUEST {
+    pub Command: UCHAR,
+    pub Speed: UCHAR,
+    pub Reserved: [UCHAR; 14usize],
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    [
+        "Size of _SMC_FAN_SPEED_REQUEST",
+    ][::core::mem::size_of::<_SMC_FAN_SPEED_REQUEST>() - 16usize];
+    [
+        "Alignment of _SMC_FAN_SPEED_REQUEST",
+    ][::core::mem::align_of::<_SMC_FAN_SPEED_REQUEST>() - 1usize];
+    [
+        "Offset of field: _SMC_FAN_SPEED_REQUEST::Command",
+    ][::core::mem::offset_of!(_SMC_FAN_SPEED_REQUEST, Command) - 0usize];
+    [
+        "Offset of field: _SMC_FAN_SPEED_REQUEST::Speed",
+    ][::core::mem::offset_of!(_SMC_FAN_SPEED_REQUEST, Speed) - 1usize];
+    [
+        "Offset of field: _SMC_FAN_SPEED_REQUEST::Reserved",
+    ][::core::mem::offset_of!(_SMC_FAN_SPEED_REQUEST, Reserved) - 2usize];
+};
+pub type SMC_FAN_SPEED_REQUEST = _SMC_FAN_SPEED_REQUEST;
+pub type PSMC_FAN_SPEED_REQUEST = *mut _SMC_FAN_SPEED_REQUEST;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _SMC_POWER_LED_REQUEST {
+    pub Command: UCHAR,
+    pub Mode: UCHAR,
+    pub Option: UCHAR,
+    pub Reserved: [UCHAR; 13usize],
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    [
+        "Size of _SMC_POWER_LED_REQUEST",
+    ][::core::mem::size_of::<_SMC_POWER_LED_REQUEST>() - 16usize];
+    [
+        "Alignment of _SMC_POWER_LED_REQUEST",
+    ][::core::mem::align_of::<_SMC_POWER_LED_REQUEST>() - 1usize];
+    [
+        "Offset of field: _SMC_POWER_LED_REQUEST::Command",
+    ][::core::mem::offset_of!(_SMC_POWER_LED_REQUEST, Command) - 0usize];
+    [
+        "Offset of field: _SMC_POWER_LED_REQUEST::Mode",
+    ][::core::mem::offset_of!(_SMC_POWER_LED_REQUEST, Mode) - 1usize];
+    [
+        "Offset of field: _SMC_POWER_LED_REQUEST::Option",
+    ][::core::mem::offset_of!(_SMC_POWER_LED_REQUEST, Option) - 2usize];
+    [
+        "Offset of field: _SMC_POWER_LED_REQUEST::Reserved",
+    ][::core::mem::offset_of!(_SMC_POWER_LED_REQUEST, Reserved) - 3usize];
+};
+pub type SMC_POWER_LED_REQUEST = _SMC_POWER_LED_REQUEST;
+pub type PSMC_POWER_LED_REQUEST = *mut _SMC_POWER_LED_REQUEST;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _SMC_RING_OF_LIGHT_REQUEST {
+    pub Command: UCHAR,
+    pub Flags: UCHAR,
+    pub Quadrants: UCHAR,
+    pub Reserved: [UCHAR; 13usize],
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    [
+        "Size of _SMC_RING_OF_LIGHT_REQUEST",
+    ][::core::mem::size_of::<_SMC_RING_OF_LIGHT_REQUEST>() - 16usize];
+    [
+        "Alignment of _SMC_RING_OF_LIGHT_REQUEST",
+    ][::core::mem::align_of::<_SMC_RING_OF_LIGHT_REQUEST>() - 1usize];
+    [
+        "Offset of field: _SMC_RING_OF_LIGHT_REQUEST::Command",
+    ][::core::mem::offset_of!(_SMC_RING_OF_LIGHT_REQUEST, Command) - 0usize];
+    [
+        "Offset of field: _SMC_RING_OF_LIGHT_REQUEST::Flags",
+    ][::core::mem::offset_of!(_SMC_RING_OF_LIGHT_REQUEST, Flags) - 1usize];
+    [
+        "Offset of field: _SMC_RING_OF_LIGHT_REQUEST::Quadrants",
+    ][::core::mem::offset_of!(_SMC_RING_OF_LIGHT_REQUEST, Quadrants) - 2usize];
+    [
+        "Offset of field: _SMC_RING_OF_LIGHT_REQUEST::Reserved",
+    ][::core::mem::offset_of!(_SMC_RING_OF_LIGHT_REQUEST, Reserved) - 3usize];
+};
+pub type SMC_RING_OF_LIGHT_REQUEST = _SMC_RING_OF_LIGHT_REQUEST;
+pub type PSMC_RING_OF_LIGHT_REQUEST = *mut _SMC_RING_OF_LIGHT_REQUEST;
 pub type PHAL_SMC_NOTIFICATION = ::core::option::Option<
     unsafe extern "C" fn(Registration: *mut _HAL_SMC_REGISTRATION, Message: PSMC_MESSAGE),
 >;
@@ -6960,6 +7268,34 @@ unsafe extern "C" {
         AndMask: ULONG,
         OrMask: ULONG,
     ) -> NTSTATUS;
+    /** Hands a signed expansion image to the hypervisor, which verifies and
+ installs it. Fails with STATUS_INVALID_PARAMETER when ImageSize is above
+ EX_EXPANSION_MAX_SIZE or not a multiple of EX_EXPANSION_SIZE_ALIGNMENT,
+ and with STATUS_UNSUCCESSFUL when the hypervisor refuses the image.
+
+ The kernel passes MmGetPhysicalAddress(ImageBase) to the hypervisor
+ without copying. The image must be physically contiguous, start on a
+ multiple of 0x80 and stay within one 64 KiB physical block; a physical
+ address below 0x40000 or above the top of memory halts the console. The
+ hypervisor moves the buffer into integrity-protected memory and zeroes
+ it afterwards. A buffer that covers only part of its pages halts the
+ stock 16547 hypervisor, so pass a whole 64 KiB block with the image at
+ its start and ImageSize EX_EXPANSION_MAX_SIZE: memory from
+ MmAllocatePhysicalMemoryEx with MEM_LARGE_PAGES, a lowest address of
+ 0x40000 and a 64 KiB alignment. The hypervisor reads the image size
+ from the image header.*/
+    pub fn ExExpansionInstall(ImageBase: PVOID, ImageSize: ULONG) -> NTSTATUS;
+    /** Calls the installed kernel expansion ExpansionId with four arguments and
+ returns its status. Fails with STATUS_NOT_IMPLEMENTED when no expansion
+ of that id is installed. The meaning of the arguments is the
+ expansion's.*/
+    pub fn ExExpansionCall(
+        ExpansionId: ULONG,
+        Argument1: ULONG_PTR,
+        Argument2: ULONG_PTR,
+        Argument3: ULONG_PTR,
+        Argument4: ULONG_PTR,
+    ) -> NTSTATUS;
     /// Sets an event to not signaled.
     pub fn NtClearEvent(EventHandle: HANDLE) -> NTSTATUS;
     /// Closes a handle.
@@ -7302,6 +7638,21 @@ unsafe extern "C" {
         MinimumVersion: ULONG,
         ModuleHandle: *mut PLDR_DATA_TABLE_ENTRY,
     ) -> NTSTATUS;
+    /** Loads a XEX image from ImageSize bytes at ImageBuffer under the module
+ name ImageName and stores its module handle. ImageName must be a bare
+ name without a path (STATUS_OBJECT_PATH_INVALID otherwise), and a
+ module of that name must not be loaded (STATUS_OBJECT_NAME_COLLISION).
+ The DLL bit of LoadFlags must equal that of the image's module flags;
+ without it the image loads as the title. MinimumVersion is the oldest
+ version accepted (see XEX_VERSION).*/
+    pub fn XexLoadImageFromMemory(
+        ImageBuffer: PVOID,
+        ImageSize: ULONG,
+        ImageName: PCSZ,
+        LoadFlags: ULONG,
+        MinimumVersion: ULONG,
+        ModuleHandle: *mut PLDR_DATA_TABLE_ENTRY,
+    ) -> NTSTATUS;
     /// Finds the loader entry of the module that contains an address. Returns the image base.
     pub fn XexPcToFileHeader(
         PcValue: PVOID,
@@ -7368,6 +7719,10 @@ unsafe extern "C" {
         ConsoleId: PXE_CONSOLE_ID,
         ConsoleIdString: PCHAR,
     ) -> NTSTATUS;
+    /** Stores the console type field of the console certificate (key 0x36).
+ Which values mean a development kit, a test kit or a retail console is
+ not established.*/
+    pub fn XeKeysGetConsoleType(ConsoleType: PULONG) -> NTSTATUS;
     /** Makes the command processor write its ring read pointer, in dwords, to
  PhysicalAddress (dword aligned). BlockSizeLog2 is the read pointer block
  size field of the ring control register.*/

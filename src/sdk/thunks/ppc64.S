@@ -11,6 +11,8 @@ xbox360_thunk ExAllocatePoolTypeWithTag, 0x0100000b
 xbox360_thunk ExAllocatePoolWithTag, 0x0100000a
 xbox360_thunk ExCreateThread, 0x0100000d
 xbox360_thunk ExDebugMonitorService, 0x010001aa
+xbox360_thunk ExExpansionCall, 0x0100030c
+xbox360_thunk ExExpansionInstall, 0x0100030b
 xbox360_thunk ExFreePool, 0x0100000f
 xbox360_thunk ExGetXConfigSetting, 0x01000010
 xbox360_thunk ExReadModifyWriteXConfigSettingUlong, 0x010002bc
@@ -384,6 +386,7 @@ xbox360_thunk XeCryptHmacSha, 0x01000182
 xbox360_thunk XeCryptMd5, 0x01000187
 xbox360_thunk XeCryptRandom, 0x0100018a
 xbox360_thunk XeKeysGetConsoleID, 0x01000246
+xbox360_thunk XeKeysGetConsoleType, 0x01000247
 xbox360_thunk XeKeysGetKey, 0x01000244
 xbox360_thunk XeKeysGetStatus, 0x0100023f
 xbox360_thunk XeKeysSaveBootLoader, 0x0100023d
@@ -391,6 +394,7 @@ xbox360_thunk XexGetModuleHandle, 0x01000195
 xbox360_thunk XexGetModuleSection, 0x01000196
 xbox360_thunk XexGetProcedureAddress, 0x01000197
 xbox360_thunk XexLoadImage, 0x01000199
+xbox360_thunk XexLoadImageFromMemory, 0x0100019a
 xbox360_thunk XexPcToFileHeader, 0x0100019c
 xbox360_thunk XexUnloadImage, 0x010001a1
 xbox360_slot __imp_ExConsoleGameRegion, 0x0000000c

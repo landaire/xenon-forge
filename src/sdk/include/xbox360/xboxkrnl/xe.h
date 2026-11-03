@@ -95,6 +95,19 @@ XBOXKRNL_IMPORT(0x244) NTSTATUS XeKeysGetKey(ULONG KeyId, PVOID Buffer, PULONG L
  */
 XBOXKRNL_IMPORT(0x246) NTSTATUS XeKeysGetConsoleID(PXE_CONSOLE_ID ConsoleId, PCHAR ConsoleIdString);
 
+/*
+ * XeKeysGetConsoleType value bit: the console certificate is signed with
+ * public key 0x3A; without it, with key 0x3C.
+ */
+#define XE_CONSOLE_TYPE_KEY_3A 0x80000000
+
+/**
+ * Stores the console type field of the console certificate (key 0x36).
+ * Which values mean a development kit, a test kit or a retail console is
+ * not established.
+ */
+XBOXKRNL_IMPORT(0x247) NTSTATUS XeKeysGetConsoleType(PULONG ConsoleType);
+
 XBOX360_EXTERN_C_END
 
 #endif

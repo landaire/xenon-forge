@@ -37,9 +37,13 @@ pub use xbox360_system::debug;
 #[cfg(any(target_os = "xbox360", xbox360_docs))]
 pub use xbox360_system::directory;
 #[cfg(any(target_os = "xbox360", xbox360_docs))]
+pub use xbox360_system::expansion;
+#[cfg(any(target_os = "xbox360", xbox360_docs))]
 pub use xbox360_system::module;
 #[cfg(any(target_os = "xbox360", xbox360_docs))]
 pub use xbox360_system::pool;
+#[cfg(any(target_os = "xbox360", xbox360_docs))]
+pub use xbox360_system::smc;
 #[cfg(any(target_os = "xbox360", xbox360_docs))]
 pub use xbox360_system::title;
 #[cfg(any(target_os = "xbox360", xbox360_docs))]

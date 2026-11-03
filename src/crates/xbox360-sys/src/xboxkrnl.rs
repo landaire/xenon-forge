@@ -21,6 +21,7 @@ mod loader;
 mod memory;
 mod network;
 mod object;
+mod smc;
 mod string;
 mod system;
 mod thread;
@@ -38,6 +39,7 @@ pub use self::audio::XmaContextInit;
 pub use self::audio::XmaLoopData;
 pub use self::boolean::Boolean;
 pub use self::boolean::Boolean8;
+pub use self::crypt::CertificateConsoleType;
 pub use self::crypt::DesState;
 pub use self::debug::CdromChannelInformation;
 pub use self::debug::DebugMemoryStatistics;
@@ -97,12 +99,29 @@ pub use self::hardware::HardwareBootFlags;
 pub use self::hardware::HardwareFlags;
 pub use self::hardware::HardwareGeneration;
 pub use self::hardware::HardwareInfo;
+pub use self::hardware::HardwarePlatform;
+pub use self::hardware::KitType;
 pub use self::hardware::PmwRegister;
 pub use self::hardware::PrvRegister;
 pub use self::hardware::SmcCommand;
 pub use self::hardware::SmcI2cDevice;
 pub use self::hardware::SmcMessage;
 pub use self::hardware::SpecialPurposeRegister;
+pub use self::smc::FanAlgorithm;
+pub use self::smc::FanSpeed;
+pub use self::smc::Percent;
+pub use self::smc::PowerLed;
+pub use self::smc::PowerLedPattern;
+pub use self::smc::PowerUpCause;
+pub use self::smc::PowerUpCauseCode;
+pub use self::smc::QuadrantMask;
+pub use self::smc::RingOfLight;
+pub use self::smc::SmcDecodeError;
+pub use self::smc::SmcRequest;
+pub use self::smc::SmcVersion;
+pub use self::smc::Temperature;
+pub use self::smc::Temperatures;
+pub use self::smc::VersionReply;
 pub use self::loader::DllEntryReason;
 pub use self::loader::ImageFlags;
 pub use self::loader::ImageVersion;
@@ -140,6 +159,7 @@ pub use self::object::WaitReason;
 pub use self::object::WaitType;
 pub use self::string::AnsiString;
 pub use self::string::UnicodeString;
+pub use self::system::ExpansionId;
 pub use self::system::KernelVersion;
 pub use self::system::TimeStampBundle;
 pub use self::thread::Irql;
@@ -1253,6 +1273,21 @@ import!(
 );
 
 import!(
+    /// Loads a XEX image from `size` bytes at `buffer` under the module name `name` and stores its
+    /// module handle. `name` must have no path (`STATUS_OBJECT_PATH_INVALID`) and no module of that
+    /// name may be loaded (`STATUS_OBJECT_NAME_COLLISION`). The DLL flag of `flags` must equal the
+    /// image's; without it the image loads as the title. `version` is the oldest version accepted.
+    pub XexLoadImageFromMemory(
+        buffer: *const u8,
+        size: u32,
+        name: *const u8,
+        flags: ImageFlags,
+        version: ImageVersion,
+        handle: *mut u32,
+    ) -> NtStatus
+);
+
+import!(
     /// Finds the loader entry of the module that contains an address. Returns the image base.
     pub XexPcToFileHeader(address: u32, entry: *mut u32) -> u32
 );
@@ -1541,6 +1576,11 @@ import!(
 );
 
 import!(
+    /// Stores the console type field of the console certificate.
+    pub XeKeysGetConsoleType(console_type: *mut CertificateConsoleType) -> NtStatus
+);
+
+import!(
     /// Writes a 64-dword front buffer flip into `commands`: when `system_buffer` holds a buffer, fetch
     /// constant 15 from the 6-dword `fetch_constant` (base address virtual) and an indirect buffer call
     /// of it, then an event write of `identifier` to `identifier_address` (virtual), padded with a NOP.
@@ -1599,4 +1639,23 @@ import!(
     /// Replaces a 4-byte configuration setting with `(old & and_mask) | or_mask`.
     /// The 16-bit arguments pass zero-extended in full registers.
     pub ExReadModifyWriteXConfigSettingUlong(category: u16, setting: u16, and_mask: u32, or_mask: u32) -> NtStatus
+);
+
+import!(
+    /// Hands a signed expansion image to the hypervisor, which verifies and installs it. Fails with
+    /// `STATUS_INVALID_PARAMETER` when `size` is above [`ExpansionId::MAX_IMAGE_SIZE`] or not a
+    /// multiple of [`ExpansionId::IMAGE_SIZE_ALIGNMENT`], and with `STATUS_UNSUCCESSFUL` when the
+    /// hypervisor refuses the image. The kernel passes the physical address of `image` without
+    /// copying: it must be physically contiguous, start on a multiple of 0x80, stay within one 64 KiB
+    /// physical block and lie at or above 0x40000 (below that the console halts). The hypervisor
+    /// moves the buffer into integrity-protected memory and zeroes it afterwards; a buffer that
+    /// covers only part of its pages halts the stock 16547 hypervisor, so pass a whole 64 KiB block
+    /// (64 KiB aligned, `size` 0x10000) with the image at its start.
+    pub ExExpansionInstall(image: *const u8, size: u32) -> NtStatus
+);
+
+import!(
+    /// Calls the installed kernel expansion `id` with four arguments and returns its status.
+    /// Fails with `STATUS_NOT_IMPLEMENTED` when no expansion of that id is installed.
+    pub ExExpansionCall(id: ExpansionId, argument1: u32, argument2: u32, argument3: u32, argument4: u32) -> NtStatus
 );

@@ -259,3 +259,45 @@ pub unsafe fn load_image(
 
     Ok(LoadedImage(handle))
 }
+
+/// Load the XEX image in `image` as the module `name`. `name` must be a
+/// bare module name without a path, and no module of that name may be
+/// loaded. The `DLL` flag of `flags` must match the image's module flags;
+/// without it the image loads as the title. `minimum_version` rejects
+/// older images; `None` accepts any version. Resolve its exports with
+/// [`resolve_export`].
+///
+/// # Safety
+///
+/// Loading an image runs its entry point and startup code, such as TLS
+/// callbacks and static initializers, which may do anything. The caller
+/// must trust the image.
+pub unsafe fn load_image_from_memory(
+    image: &[u8],
+    name: &CStr,
+    flags: ImageFlags,
+    minimum_version: Option<ImageVersion>,
+) -> Result<LoadedImage, KernelError> {
+    let size = u32::try_from(image.len()).map_err(|_| KernelError::InvalidParameter)?;
+    let version = minimum_version.unwrap_or(ImageVersion::ANY);
+    let mut handle = 0u32;
+
+    // SAFETY: `image` is readable for `size` bytes, `name` is
+    // NUL-terminated, `handle` is live local storage, and the caller
+    // trusts the image's startup code.
+    unsafe {
+        xboxkrnl::XexLoadImageFromMemory(
+            image.as_ptr(),
+            size,
+            name.as_ptr().cast(),
+            flags,
+            version,
+            &mut handle,
+        )
+    }
+    .result()?;
+
+    let handle = NonZeroU32::new(handle).ok_or(DLL_NOT_FOUND)?;
+
+    Ok(LoadedImage(handle))
+}

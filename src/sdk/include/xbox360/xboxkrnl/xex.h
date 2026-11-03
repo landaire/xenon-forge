@@ -214,6 +214,24 @@ XBOXKRNL_IMPORT(0x199) NTSTATUS XexLoadImage(
     PLDR_DATA_TABLE_ENTRY *ModuleHandle
 );
 
+/**
+ * Loads a XEX image from ImageSize bytes at ImageBuffer under the module
+ * name ImageName and stores its module handle. ImageName must be a bare
+ * name without a path (STATUS_OBJECT_PATH_INVALID otherwise), and a
+ * module of that name must not be loaded (STATUS_OBJECT_NAME_COLLISION).
+ * The DLL bit of LoadFlags must equal that of the image's module flags;
+ * without it the image loads as the title. MinimumVersion is the oldest
+ * version accepted (see XEX_VERSION).
+ */
+XBOXKRNL_IMPORT(0x19A) NTSTATUS XexLoadImageFromMemory(
+    PVOID ImageBuffer,
+    ULONG ImageSize,
+    PCSZ ImageName,
+    ULONG LoadFlags,
+    ULONG MinimumVersion,
+    PLDR_DATA_TABLE_ENTRY *ModuleHandle
+);
+
 /** Finds the loader entry of the module that contains an address. Returns the image base. */
 XBOXKRNL_IMPORT(0x19C) PVOID XexPcToFileHeader(PVOID PcValue, PLDR_DATA_TABLE_ENTRY *DataTableEntry);
 

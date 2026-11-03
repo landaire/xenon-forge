@@ -846,7 +846,7 @@ fn check_console() -> Outcome {
         "INFO console: kernel {}, hardware flags {:#010x}, type {:?}, generation {}, hard disk {}",
         Version(version),
         flags.bits(),
-        console::ConsoleType::from_hardware_flags(flags),
+        console::kit_type(),
         u32::from(flags.generation().get()),
         flags.contains(console::HardwareFlags::HARD_DISK)
     );

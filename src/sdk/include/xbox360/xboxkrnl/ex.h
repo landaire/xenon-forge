@@ -230,6 +230,44 @@ XBOXKRNL_IMPORT(0x2BC) NTSTATUS ExReadModifyWriteXConfigSettingUlong(
     ULONG OrMask
 );
 
+/* Largest image of ExExpansionInstall, and the multiple its size must be. */
+#define EX_EXPANSION_MAX_SIZE       0x10000
+#define EX_EXPANSION_SIZE_ALIGNMENT 128
+
+/**
+ * Hands a signed expansion image to the hypervisor, which verifies and
+ * installs it. Fails with STATUS_INVALID_PARAMETER when ImageSize is above
+ * EX_EXPANSION_MAX_SIZE or not a multiple of EX_EXPANSION_SIZE_ALIGNMENT,
+ * and with STATUS_UNSUCCESSFUL when the hypervisor refuses the image.
+ *
+ * The kernel passes MmGetPhysicalAddress(ImageBase) to the hypervisor
+ * without copying. The image must be physically contiguous, start on a
+ * multiple of 0x80 and stay within one 64 KiB physical block; a physical
+ * address below 0x40000 or above the top of memory halts the console. The
+ * hypervisor moves the buffer into integrity-protected memory and zeroes
+ * it afterwards. A buffer that covers only part of its pages halts the
+ * stock 16547 hypervisor, so pass a whole 64 KiB block with the image at
+ * its start and ImageSize EX_EXPANSION_MAX_SIZE: memory from
+ * MmAllocatePhysicalMemoryEx with MEM_LARGE_PAGES, a lowest address of
+ * 0x40000 and a 64 KiB alignment. The hypervisor reads the image size
+ * from the image header.
+ */
+XBOXKRNL_IMPORT(0x30B) NTSTATUS ExExpansionInstall(PVOID ImageBase, ULONG ImageSize);
+
+/**
+ * Calls the installed kernel expansion ExpansionId with four arguments and
+ * returns its status. Fails with STATUS_NOT_IMPLEMENTED when no expansion
+ * of that id is installed. The meaning of the arguments is the
+ * expansion's.
+ */
+XBOXKRNL_IMPORT(0x30C) NTSTATUS ExExpansionCall(
+    ULONG ExpansionId,
+    ULONG_PTR Argument1,
+    ULONG_PTR Argument2,
+    ULONG_PTR Argument3,
+    ULONG_PTR Argument4
+);
+
 /** Sets an event to not signaled. */
 XBOXKRNL_IMPORT(0x0CE) NTSTATUS NtClearEvent(HANDLE EventHandle);
 
