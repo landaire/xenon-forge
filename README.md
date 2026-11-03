@@ -155,7 +155,13 @@ For example:
 bin/buck2 build //examples/hello:hello --target-platforms xbox360//platforms:ppc64 --show-output
 ```
 
-This will grab and/or build the required custom LLVM toolchain.
+This will grab and/or build the required custom LLVM toolchain. It runs on Linux x86_64, macOS arm64, and Windows x86_64, where Buck2 downloads a prebuilt build of it.
+
+Every tool of the prebuilt toolchain (`rustc`, `clang`, `ld.lld`, `llvm-objdump` and the rest) is also published as a DotSlash file named `xbox360-<tool>`, on the [`toolchain-nightly` release](https://github.com/landaire/xenon-forge/releases/tag/toolchain-nightly) and in `toolchains/` of the `nightly-toolchain` branch. Run one directly to use the tool without Buck2:
+
+```shell
+dotslash toolchains/xbox360-clang --version
+```
 
 ## Components
 
