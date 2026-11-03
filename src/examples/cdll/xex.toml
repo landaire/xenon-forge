@@ -1,0 +1,8 @@
+load_address = 0x91e00000
+module_flags = ["DLL"]
+version = "1.0.0.0"
+
+# No module or library_id: the exports have no id, and resolve only through
+# XexGetProcedureAddress.
+[exports]
+min_version = "1.0.0.0"

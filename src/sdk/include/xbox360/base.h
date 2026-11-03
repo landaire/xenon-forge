@@ -7,7 +7,8 @@
  *
  * Every import is declared with XBOX360_IMPORT(library, ordinal). The
  * annotation names the library and export ordinal. xbox360-bindgen reads it
- * to generate the import thunks that C and Rust code link with.
+ * to generate the import thunks that C and Rust code link with. A module
+ * exports a function with XBOX360_EXPORT(ordinal, function).
  */
 
 #ifndef XBOX360_BASE_H
@@ -129,5 +130,60 @@ C_ASSERT(sizeof(LIST_ENTRY) == 8);
 C_ASSERT(sizeof(LARGE_INTEGER) == 8);
 
 XBOX360_EXTERN_C_END
+
+/*
+ * Export `function` at `ordinal`, an integer literal from 1 to 0xFFFF, at
+ * file scope. xex-link rejects two exports at one ordinal. Ordinals that
+ * share a function are declared once each.
+ *
+ * Callers use the console calling convention, which expects r14-r31 back in
+ * full 64 bits. Code of the powerpc (SysV) code generation saves only their
+ * low words, so the export is an entry like the `_start` of the C runtime:
+ * it saves r14-r31 in full, reserves the home area that console callees
+ * store their arguments in, and calls `function` with r3-r10 unchanged.
+ * `function` takes at most eight 32-bit integer or pointer arguments and
+ * returns a 32-bit result or none.
+ *
+ * The export is an 8-byte `.xexports` record, as `xbox360_sys::export!`
+ * writes: the big-endian ordinal, then the address of the entry. xex-link
+ * turns the records into the XEX export table.
+ */
+#define XBOX360_EXPORT(ordinal, function) \
+    XBOX360_EXPORT_IMPL(ordinal, function, __xbox360_export_##ordinal)
+
+/* XBOX360_EXPORT with `name`, the symbol of the entry. */
+#define XBOX360_EXPORT_IMPL(ordinal, function, name)                                \
+    _Static_assert((ordinal) >= 1 && (ordinal) <= 0xFFFF,                           \
+                   "export ordinals are 1 to 0xFFFF");                              \
+    __attribute__((used)) static __typeof__(function) *const name##_target          \
+        __asm__(#name "_target") = function;                                        \
+    extern VOID name(VOID) __asm__(#name);                                          \
+    __attribute__((used, retain, section(".xexports"))) static const struct {       \
+        ULONG Ordinal;                                                              \
+        VOID (*Entry)(VOID);                                                        \
+    } name##_record = {(ordinal), name};                                            \
+    __asm__(".pushsection .text." #name ", \"ax\", @progbits\n"                     \
+            ".globl " #name "\n"                                                    \
+            ".type " #name ", @function\n"                                          \
+            ".balign 4\n" #name ":\n"                                               \
+            "stwu 1, -0xe0(1)\n"                                                    \
+            "mflr 0\n"                                                              \
+            "stw 0, 0x8(1)\n"                                                       \
+            ".irp reg, 14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31\n"     \
+            "std \\reg, 0x50 + 8 * (\\reg - 14)(1)\n"                               \
+            ".endr\n"                                                               \
+            "lis 12, " #name "_target@ha\n"                                         \
+            "lwz 12, " #name "_target@l(12)\n"                                      \
+            "mtctr 12\n"                                                            \
+            "bctrl\n"                                                               \
+            ".irp reg, 14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31\n"     \
+            "ld \\reg, 0x50 + 8 * (\\reg - 14)(1)\n"                                \
+            ".endr\n"                                                               \
+            "lwz 0, 0x8(1)\n"                                                       \
+            "mtlr 0\n"                                                              \
+            "addi 1, 1, 0xe0\n"                                                     \
+            "blr\n"                                                                 \
+            ".size " #name ", . - " #name "\n"                                      \
+            ".popsection")
 
 #endif

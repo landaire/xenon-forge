@@ -67,7 +67,7 @@ pub fn manifest_export_table(
     base: u32,
 ) -> Result<Option<Vec<u8>>> {
     let Some(ExportSettings {
-        module,
+        library,
         min_version,
     }) = &manifest.exports
     else {
@@ -75,7 +75,7 @@ pub fn manifest_export_table(
             return Ok(None);
         }
 
-        return Err(XexLinkError::ExportsWithoutModule {
+        return Err(XexLinkError::ExportsWithoutTable {
             count: exports.len(),
         }
         .into_report());
@@ -95,7 +95,7 @@ pub fn manifest_export_table(
     }
 
     let identity = ExportIdentity {
-        module_id: module.import_id,
+        module_id: library.table_id(),
         version: manifest.version,
         min_version: *min_version,
     };
@@ -106,7 +106,9 @@ pub fn manifest_export_table(
 /// Encode the loader export table: three magic words, the module id as two
 /// halves, the two versions (low 24 bits each, then both top bytes), the
 /// image base >> 16, the slot count, the first ordinal, and one image offset
-/// per ordinal with 0 for an unused ordinal.
+/// per ordinal with 0 for an unused ordinal. `XexGetProcedureAddress` reads
+/// only the first ordinal, the slot count, and the offsets; the module id
+/// and versions matter only to an importing XEX.
 fn build_export_table(
     exports: &[Export],
     sections: &[pe::Section],
@@ -178,6 +180,7 @@ fn build_export_table(
 mod tests {
     use super::*;
     use crate::manifest::DEFAULT_IMPORT_MIN_VERSION;
+    use crate::manifest::ExportLibrary;
 
     fn text_section() -> pe::Section {
         pe::Section {
@@ -289,5 +292,39 @@ mod tests {
                 va: 0x91fa_0000
             }
         ));
+    }
+
+    #[test]
+    fn export_table_records_a_custom_id_or_zero() {
+        let base = 0x91f0_0000;
+        let exports = [Export {
+            ordinal: 1,
+            va: 0x91f1_0000,
+        }];
+        let id_words = |library: ExportLibrary| {
+            let manifest = Manifest {
+                version: DEFAULT_IMPORT_MIN_VERSION,
+                exports: Some(ExportSettings {
+                    library,
+                    min_version: DEFAULT_IMPORT_MIN_VERSION,
+                }),
+                ..Manifest::default()
+            };
+            let table = manifest_export_table(&manifest, &exports, &[text_section()], base)
+                .unwrap()
+                .unwrap();
+            let word = |index: usize| {
+                u32::from_be_bytes(table[index * 4..index * 4 + 4].try_into().unwrap())
+            };
+            [word(3), word(4)]
+        };
+
+        assert_eq!(
+            id_words(ExportLibrary::Custom {
+                library_id: 0x1234_5678
+            }),
+            [0x1234, 0x5678]
+        );
+        assert_eq!(id_words(ExportLibrary::Unidentified), [0, 0]);
     }
 }

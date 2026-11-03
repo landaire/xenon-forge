@@ -76,8 +76,33 @@ pub struct ImportVersions {
 /// Identity of the emitted export table.
 #[derive(Debug, PartialEq)]
 pub struct ExportSettings {
-    pub module: &'static ExportingModule,
+    pub library: ExportLibrary,
     pub min_version: Version,
+}
+
+/// Module id recorded in the export table. The loader checks it only when
+/// another XEX imports this module: the id must equal the importer's import
+/// library id. `XexGetProcedureAddress` never reads it.
+#[derive(Debug, PartialEq)]
+pub enum ExportLibrary {
+    /// A system module with its fixed import id.
+    System(&'static ExportingModule),
+    /// Another module, such as a third-party DLL, with the given id.
+    Custom { library_id: u32 },
+    /// No id, written as 0. The exports resolve only through
+    /// `XexGetProcedureAddress`.
+    Unidentified,
+}
+
+impl ExportLibrary {
+    /// The id written to the export table.
+    pub fn table_id(&self) -> u32 {
+        match self {
+            Self::System(module) => module.import_id,
+            Self::Custom { library_id } => *library_id,
+            Self::Unidentified => 0,
+        }
+    }
 }
 
 impl Default for Manifest {
@@ -312,19 +337,33 @@ struct RawImports {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RawExports {
-    module: Spanned<String>,
+    module: Option<Spanned<String>>,
+    library_id: Option<Spanned<u32>>,
     min_version: Option<Spanned<String>>,
 }
 
 impl RawExports {
     fn resolve(self, text: &str) -> Result<ExportSettings, ManifestErrorKind> {
-        let module = LIBRARIES
-            .iter()
-            .find(|module| module.name == self.module.get_ref())
-            .ok_or_else(|| ManifestErrorKind::UnknownExportModule {
-                location: Location::at(text, self.module.span().start),
-                name: self.module.get_ref().clone(),
-            })?;
+        let library = match (self.module, self.library_id) {
+            (Some(_), Some(library_id)) => {
+                return Err(ManifestErrorKind::ConflictingExportLibrary {
+                    location: Location::at(text, library_id.span().start),
+                });
+            }
+            (Some(name), None) => ExportLibrary::System(
+                LIBRARIES
+                    .iter()
+                    .find(|module| module.name == name.get_ref())
+                    .ok_or_else(|| ManifestErrorKind::UnknownExportModule {
+                        location: Location::at(text, name.span().start),
+                        name: name.get_ref().clone(),
+                    })?,
+            ),
+            (None, Some(library_id)) => ExportLibrary::Custom {
+                library_id: library_id.into_inner(),
+            },
+            (None, None) => ExportLibrary::Unidentified,
+        };
         let min_version = version(
             text,
             ManifestKey::ExportsMinVersion,
@@ -333,7 +372,7 @@ impl RawExports {
         )?;
 
         Ok(ExportSettings {
-            module,
+            library,
             min_version,
         })
     }
@@ -506,7 +545,7 @@ min_version = "2.0.1861.0"
                     },
                 },
                 exports: Some(ExportSettings {
-                    module: &LIBRARIES[2],
+                    library: ExportLibrary::System(&LIBRARIES[2]),
                     min_version: DEFAULT_IMPORT_MIN_VERSION
                 }),
                 tls_slots: Some(32),
@@ -525,6 +564,26 @@ min_version = "2.0.1861.0"
             Some(8)
         );
         assert_eq!(parse("tls_slots = 0").unwrap().tls_slots, None);
+    }
+
+    #[test]
+    fn exports_take_a_system_module_a_custom_id_or_no_id() {
+        let library = |text| parse(text).unwrap().exports.unwrap().library;
+        assert_eq!(
+            library("[exports]\nmodule = \"xam.xex\""),
+            ExportLibrary::System(&LIBRARIES[1])
+        );
+        let custom = library("[exports]\nlibrary_id = 0x12345678");
+        assert_eq!(
+            custom,
+            ExportLibrary::Custom {
+                library_id: 0x1234_5678
+            }
+        );
+        assert_eq!(custom.table_id(), 0x1234_5678);
+        let unidentified = library("[exports]\nmin_version = \"2.0.0.0\"");
+        assert_eq!(unidentified, ExportLibrary::Unidentified);
+        assert_eq!(unidentified.table_id(), 0);
     }
 
     #[test]
@@ -664,6 +723,12 @@ min_version = "2.0.1861.0"
                 },
             ),
             (
+                "[exports]\nmodule = \"xbdm.xex\"\nlibrary_id = 0x12345678",
+                ManifestErrorKind::ConflictingExportLibrary {
+                    location: at(3, 14),
+                },
+            ),
+            (
                 "bounding_path = \"\"",
                 ManifestErrorKind::InvalidBoundingPath {
                     value: String::new(),
@@ -686,7 +751,8 @@ min_version = "2.0.1861.0"
             ),
             ("encrypt = \"xbox\"", at(1, 11)),
             ("title_id = 0x100000000", at(1, 12)),
-            ("[exports]\nmin_version = \"2.0.0.0\"", at(1, 1)),
+            ("[exports]\nid = 0x12345678", at(2, 1)),
+            ("[exports]\nlibrary_id = 0x100000000", at(2, 14)),
         ];
         for (text, expected) in cases {
             match parse(text).unwrap_err() {

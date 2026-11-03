@@ -89,6 +89,8 @@ xbox360_modifiers()
 
 C and C++ titles are `xbox360_c_title` targets with `//src/sdk:crt` in `deps` and `int main(int argc, char **argv)`; DLLs use `//src/sdk:crt-dll` and `DllMain`. `compiler_flags` add to the flags of the mode. Titles get the link script that xex-link derives from their `xex.toml` unless they set `link_script`. See [`src/examples/chello`](/src/examples/chello).
 
+A module exports a function by ordinal with `XBOX360_EXPORT(ordinal, function)` at file scope and an `[exports]` table in its `xex.toml`. The export saves r14-r31 in full 64 bits, as console callers expect, and calls `function`, which takes at most eight 32-bit integer or pointer arguments. See [`src/examples/cdll`](/src/examples/cdll), a DLL whose exports another module finds with `XexGetProcedureAddress`.
+
 ### Advanced Usage
 
 You can set some settings in your `.buckconfig.local` file (create it if it doesn't exist) that allow for advanced build steps:
@@ -209,11 +211,14 @@ tls_slots = 64              # TLS_INFO slots, 0 omits the header; default 64 wit
 version = "2.0.21173.0"     # imported module version
 min_version = "2.0.1861.0"  # minimum imported module version
 
-# Emits an export table; module is required when the table is present.
+# Emits an export table; required when the ELF declares exports.
 # [exports]
-# module = "xbdm.xex"       # xboxkrnl.exe, xam.xex, or xbdm.xex
+# module = "xbdm.xex"       # system module id: xboxkrnl.exe, xam.xex, or xbdm.xex
+# library_id = 0x12345678   # or the id of another module; at most one of the two
 # min_version = "2.0.1861.0" # oldest compatible version in the export table
 ```
+
+Exports are declared in C with `XBOX360_EXPORT(ordinal, function)` and in Rust with `xbox360_sys::export_raw!`. `XexGetProcedureAddress` resolves an export from the table's first ordinal, slot count and addresses only; it never reads the module id or the versions. Those are checked only when another XEX imports the module by name: the loader then requires the export table's id to equal the importer's import library id (else `C0000225`) and compatible versions. The id is a fixed number per module, not a hash of its name. A system module takes its id from `module`; another module, such as a third-party DLL, sets `library_id`, which its importers must use too; with neither key the id is 0 and the exports are reachable only through `XexGetProcedureAddress`. To load a DLL with `XexLoadImageFromMemory`, `module_flags` must contain `DLL` exactly when the load flags do.
 
 The load address must match the image base the ELF was linked at and must be a multiple of the page size. The loader ties the page size to the load address: images load only in 0x80000000-0x9FFFFFFF, with 64 KB pages in 0x80000000-0x8FFFFFFF (titles, at 0x82000000 by default) and 4 KB pages in 0x90000000-0x9FFFFFFF, where the console's system modules are. A development kit refused other combinations with "Load address violation" (0xC000007B). Without `page_size` or `SMALL_PAGES` in `image_flags`, xex-link takes the page size from the load address and sets `SMALL_PAGES` for 4 KB pages. A page size set either way is kept; xex-link warns when the loader is known to refuse it, or when the load address is outside 0x80000000-0x9FFFFFFF. Pick a system module address no other module uses: on a development kit, xbdm.xex is at 0x91F00000.
 

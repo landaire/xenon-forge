@@ -43,8 +43,15 @@ manifest keys:
   [imports]
   version = \"VER\"         imported module version (default \"2.0.21173.0\")
   min_version = \"VER\"     minimum imported module version (default \"2.0.1861.0\")
-  [exports]               emit an export table
-  module = \"NAME\"         module id to record: xboxkrnl.exe, xam.xex, xbdm.xex
+  [exports]               emit an export table; required when the ELF declares
+                          exports
+  module = \"NAME\"         system module whose id to record: xboxkrnl.exe,
+                          xam.xex, xbdm.xex
+  library_id = INT        id to record for another module; an XEX that imports
+                          this module needs the same id in its import library
+                          (at most one of module and library_id; with neither
+                          the id is 0 and the exports resolve only through
+                          XexGetProcedureAddress)
   min_version = \"VER\"     oldest compatible version recorded in the export
                           table (default \"2.0.1861.0\")";
 

@@ -63,8 +63,8 @@ pub enum XexLinkError {
     BadExportAddress { ordinal: u16, va: u32 },
     #[error("export ordinal {ordinal} is declared more than once")]
     DuplicateExport { ordinal: u16 },
-    #[error("{count} export(s) declared but the manifest has no [exports] module")]
-    ExportsWithoutModule { count: usize },
+    #[error("{count} export(s) declared but the manifest has no [exports] table")]
+    ExportsWithoutTable { count: usize },
     #[error("thunk references unknown import library index {0}")]
     UnknownLibrary(u8),
     #[error("building the XEX failed: {0}")]

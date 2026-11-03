@@ -1,0 +1,11 @@
+load("//buck:xex.bzl", "xbox360_c_title")
+
+xbox360_c_title(
+    name = "cdll",
+    srcs = [
+        "dll.c",
+        "export.cpp",
+    ],
+    deps = ["//src/sdk:crt-dll"],
+    manifest = "xex.toml",
+)

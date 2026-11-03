@@ -93,7 +93,11 @@ IAT slots.
 Each library entry also carries the exporting module's identifier. The
 hardware loader rejects a mismatch with `C0000225`. `xex-link` emits
 `0x45dc17e0` for `xboxkrnl.exe`, `0xfca15c76` for `xam.xex`, and `0xeceb8109`
-for `xbdm.xex`.
+for `xbdm.xex`. The identifier is a fixed number per module, not a hash of the
+name. A module's export table records its own identifier (`[exports]` `module`
+or `library_id`), which the loader compares only when another XEX imports it;
+`XexGetProcedureAddress` reads only the ordinal base, slot count and
+addresses.
 
 Key ordinals (verified in Xenia export tables):
 

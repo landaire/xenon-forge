@@ -31,9 +31,11 @@ pub enum ManifestErrorKind {
         location: Location,
     },
     #[error(
-        "{location}: unknown export module {name:?}; expected xboxkrnl.exe, xam.xex, or xbdm.xex"
+        "{location}: unknown export module {name:?}; expected xboxkrnl.exe, xam.xex, or xbdm.xex, or set library_id = 0xHEX instead for another module"
     )]
     UnknownExportModule { name: String, location: Location },
+    #[error("{location}: [exports] sets both module and library_id; set at most one")]
+    ConflictingExportLibrary { location: Location },
     #[error("{location}: invalid bounding path {value:?}; expected non-empty printable ASCII")]
     InvalidBoundingPath { value: String, location: Location },
     #[error(
