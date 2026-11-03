@@ -553,7 +553,9 @@ macro_rules! import_variable {
 
 /// Call the function in r12 with r3-r10 unchanged and the full 64-bit
 /// r14-r31 preserved. The CPU model of the target has no 64-bit mnemonics,
-/// so `std`/`ld` are encoded directly.
+/// so `std`/`ld` are encoded directly. SP+0x10 to SP+0x4f is the home area
+/// where a console-ABI callee stores its arguments, so r14-r31 are saved
+/// above it, from SP+0x50, as the C runtime entry does.
 ///
 /// # Safety
 ///
@@ -563,22 +565,22 @@ macro_rules! import_variable {
 #[unsafe(naked)]
 pub unsafe extern "C" fn entry_bridge() {
     core::arch::naked_asm!(
-        "stwu 1, -0xa0(1)",
+        "stwu 1, -0xe0(1)",
         "mflr 0",
         "stw 0, 0x8(1)",
         ".irp reg, 14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31",
-        // std \reg, 0x10 + 8 * (\reg - 14)(r1)
-        ".long (62 << 26) | (\\reg << 21) | (1 << 16) | (0x10 + 8 * (\\reg - 14))",
+        // std \reg, 0x50 + 8 * (\reg - 14)(r1)
+        ".long (62 << 26) | (\\reg << 21) | (1 << 16) | (0x50 + 8 * (\\reg - 14))",
         ".endr",
         "mtctr 12",
         "bctrl",
         ".irp reg, 14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31",
-        // ld \reg, 0x10 + 8 * (\reg - 14)(r1)
-        ".long (58 << 26) | (\\reg << 21) | (1 << 16) | (0x10 + 8 * (\\reg - 14))",
+        // ld \reg, 0x50 + 8 * (\reg - 14)(r1)
+        ".long (58 << 26) | (\\reg << 21) | (1 << 16) | (0x50 + 8 * (\\reg - 14))",
         ".endr",
         "lwz 0, 0x8(1)",
         "mtlr 0",
-        "addi 1, 1, 0xa0",
+        "addi 1, 1, 0xe0",
         "blr",
     )
 }
