@@ -112,6 +112,8 @@ And the following optional keys:
   gdb_listen = "127.0.0.1:2159"
 ```
 
+`xbdm_tool` and `kd_tool` are optional when `xeedee` and `openxbdm-kd` are on your `PATH`, or on Linux x86_64, macOS arm64, and Windows x86_64, where Buck2 downloads them from a pinned [openxbdm](https://github.com/landaire/openxbdm) release (`xbox360//buck:xeedee`, `xbox360//buck:openxbdm-kd`). On other hosts, set them to run titles.
+
 This will allow you to build, deploy, and run directly to your console:
 
 ```shell

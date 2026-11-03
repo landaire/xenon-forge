@@ -70,19 +70,15 @@ _TOOL_ATTRS = {
     "_gdb_listen": attrs.string(default = read_root_config("xbox360", "gdb_listen") or "127.0.0.1:2159"),
     "_gdb_tool": attrs.string(default = read_root_config("xbox360", "gdb_tool") or "gdb"),
     "_kd_tool": attrs.string(default = read_root_config("xbox360", "kd_tool") or ""),
-    "_kd_tool_fallback": attrs.exec_dep(
-        providers = [RunInfo],
-        default = "xbox360//buck:openxbdm-kd",
-    ),
+    # The downloaded tools; without RunInfo on a host that the release has
+    # no archive for (buck/openxbdm_tools.bzl).
+    "_kd_tool_fallback": attrs.exec_dep(default = "xbox360//buck:openxbdm-kd"),
     "_python_bootstrap_toolchain": toolchains_common.python_bootstrap(),
     "_run_title": attrs.source(default = "xbox360//buck:run_title.py"),
     "_write_stdout": attrs.source(default = "xbox360//buck:write_stdout.py"),
     "_write_vscode_workspace": attrs.source(default = "xbox360//buck:write_vscode_workspace.py"),
     "_xbdm_tool": attrs.string(default = read_root_config("xbox360", "xbdm_tool") or ""),
-    "_xbdm_tool_fallback": attrs.exec_dep(
-        providers = [RunInfo],
-        default = "xbox360//buck:xeedee",
-    ),
+    "_xbdm_tool_fallback": attrs.exec_dep(default = "xbox360//buck:xeedee"),
     "_xex_link": attrs.exec_dep(providers = [RunInfo], default = "xbox360//src/crates/xex-link:xex-link"),
 }
 
@@ -94,10 +90,6 @@ def _run_title_command(
     command = cmd_args(
         ctx.attrs._python_bootstrap_toolchain[PythonBootstrapToolchainInfo].interpreter,
         ctx.attrs._run_title,
-        "--fallback-xbdm-tool",
-        ctx.attrs._xbdm_tool_fallback[RunInfo],
-        "--fallback-kd-tool",
-        ctx.attrs._kd_tool_fallback[RunInfo],
         "--gdb",
         ctx.attrs._gdb_tool,
         "--listen",
@@ -105,6 +97,12 @@ def _run_title_command(
         "--registers",
         ctx.attrs._debug_registers,
     )
+    xbdm_tool_fallback = ctx.attrs._xbdm_tool_fallback.get(RunInfo)
+    if xbdm_tool_fallback:
+        command.add("--fallback-xbdm-tool", xbdm_tool_fallback)
+    kd_tool_fallback = ctx.attrs._kd_tool_fallback.get(RunInfo)
+    if kd_tool_fallback:
+        command.add("--fallback-kd-tool", kd_tool_fallback)
     if ctx.attrs._xbdm_tool:
         command.add("--xbdm-tool", ctx.attrs._xbdm_tool)
     if ctx.attrs._kd_tool:
