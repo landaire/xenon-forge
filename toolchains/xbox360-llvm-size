@@ -1,0 +1,43 @@
+#!/usr/bin/env dotslash
+
+{
+  "name": "xbox360-llvm-size",
+  "platforms": {
+    "linux-x86_64": {
+      "digest": "80b6fb993a31caa97e0bba7abbe73061d7f2a4bedba3da409b0fdf23bf3a78ae",
+      "format": "tar.xz",
+      "hash": "blake3",
+      "path": "xbox360-toolchain-x86_64-unknown-linux-gnu/bin/llvm-size",
+      "providers": [
+        {
+          "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-17e188e5bd9f/xbox360-toolchain-x86_64-unknown-linux-gnu.tar.xz"
+        }
+      ],
+      "size": 311600184
+    },
+    "macos-aarch64": {
+      "digest": "a1a9cd45344cdd8670e9f43f9695153e2229606494b3b05beaa8b2d27d439d45",
+      "format": "tar.xz",
+      "hash": "blake3",
+      "path": "xbox360-toolchain-aarch64-apple-darwin/bin/llvm-size",
+      "providers": [
+        {
+          "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-17e188e5bd9f/xbox360-toolchain-aarch64-apple-darwin.tar.xz"
+        }
+      ],
+      "size": 242380672
+    },
+    "windows-x86_64": {
+      "digest": "48320bdb5a2a4f8dae977ca43d14c115e68c10323dcfda099e19732a6e4a1c16",
+      "format": "tar.gz",
+      "hash": "blake3",
+      "path": "xbox360-toolchain-x86_64-pc-windows-msvc/bin/llvm-size.exe",
+      "providers": [
+        {
+          "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-17e188e5bd9f/xbox360-toolchain-x86_64-pc-windows-msvc.tar.gz"
+        }
+      ],
+      "size": 338815062
+    }
+  }
+}

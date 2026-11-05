@@ -1,4 +1,4 @@
-"""Pin for the latest tested prebuilt PPC64 toolchain."""
+"""Generated pin for the latest tested prebuilt PPC64 toolchain."""
 
 DEFAULT_PPC64_TOOLCHAIN = "prebuilt"
 
@@ -6,25 +6,25 @@ NIGHTLY_TOOLCHAIN = {
     "hosts": {
         "linux": {
             "x86_64": {
-                "sha256": "720535e797486ab72dc208b65d2cc019b88fbd9d13b176f6d871481cbd73c0ae",
+                "sha256": "42d260fa11bac40e99d190ebe1448d38ff6bac150293e72517a84a6ff237dcce",
                 "strip_prefix": "xbox360-toolchain-x86_64-unknown-linux-gnu",
-                "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-c9997c1d885d/xbox360-toolchain-x86_64-unknown-linux-gnu.tar.xz",
+                "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-17e188e5bd9f/xbox360-toolchain-x86_64-unknown-linux-gnu.tar.xz",
             },
         },
         "macos": {
             "arm64": {
-                "sha256": "e037b503e12da3d122b66e4364d609cee9b25cf8993415ac6f7c1eacaa049b8e",
+                "sha256": "a03bea9053144538ce5d09a0ac3ea9e02185618bf5b6d39c44e6b13510637ec2",
                 "strip_prefix": "xbox360-toolchain-aarch64-apple-darwin",
-                "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-c9997c1d885d/xbox360-toolchain-aarch64-apple-darwin.tar.xz",
+                "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-17e188e5bd9f/xbox360-toolchain-aarch64-apple-darwin.tar.xz",
             },
         },
         "windows": {
             "x86_64": {
-                "sha256": "777bad411ca3e82fdeb69ae6813da105f829df6c3e72c2254ea081acdcd9ed51",
+                "sha256": "7454011b1de19624865f8601774baa9d82cb7b384a1ac4a428a0ee788bbb7ebf",
                 "strip_prefix": "xbox360-toolchain-x86_64-pc-windows-msvc",
-                "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-c9997c1d885d/xbox360-toolchain-x86_64-pc-windows-msvc.tar.gz",
+                "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-17e188e5bd9f/xbox360-toolchain-x86_64-pc-windows-msvc.tar.gz",
             },
         },
     },
-    "source_commit": "a0e1737130259f114fd176cea02984cafa1ed974",
+    "source_commit": "f369053666c0d56176c8fdefd7d87f3dcc168c63",
 }

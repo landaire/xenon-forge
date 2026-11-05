@@ -1,0 +1,142 @@
+{
+  "archives": {
+    "aarch64-apple-darwin": {
+      "blake3": "a1a9cd45344cdd8670e9f43f9695153e2229606494b3b05beaa8b2d27d439d45",
+      "format": "tar.xz",
+      "llvm_tools": [
+        "FileCheck",
+        "clang",
+        "clang++",
+        "clang-cpp",
+        "ld.lld",
+        "llc",
+        "lld",
+        "llvm-addr2line",
+        "llvm-ar",
+        "llvm-dwarfdump",
+        "llvm-mc",
+        "llvm-nm",
+        "llvm-objcopy",
+        "llvm-objdump",
+        "llvm-ranlib",
+        "llvm-readelf",
+        "llvm-readobj",
+        "llvm-size",
+        "llvm-strings",
+        "llvm-strip",
+        "llvm-symbolizer",
+        "opt",
+        "rust-lld"
+      ],
+      "name": "xbox360-toolchain-aarch64-apple-darwin.tar.xz",
+      "rust_tools": [
+        "clippy-driver",
+        "rustc",
+        "rustdoc"
+      ],
+      "sha256": "a03bea9053144538ce5d09a0ac3ea9e02185618bf5b6d39c44e6b13510637ec2",
+      "size": 242380672,
+      "strip_prefix": "xbox360-toolchain-aarch64-apple-darwin",
+      "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-17e188e5bd9f/xbox360-toolchain-aarch64-apple-darwin.tar.xz"
+    },
+    "x86_64-pc-windows-msvc": {
+      "blake3": "48320bdb5a2a4f8dae977ca43d14c115e68c10323dcfda099e19732a6e4a1c16",
+      "format": "tar.gz",
+      "llvm_tools": [
+        "FileCheck",
+        "clang",
+        "clang++",
+        "clang-cpp",
+        "ld.lld",
+        "llc",
+        "lld",
+        "llvm-addr2line",
+        "llvm-ar",
+        "llvm-dwarfdump",
+        "llvm-mc",
+        "llvm-nm",
+        "llvm-objcopy",
+        "llvm-objdump",
+        "llvm-ranlib",
+        "llvm-readelf",
+        "llvm-readobj",
+        "llvm-size",
+        "llvm-strings",
+        "llvm-strip",
+        "llvm-symbolizer",
+        "opt",
+        "rust-lld"
+      ],
+      "name": "xbox360-toolchain-x86_64-pc-windows-msvc.tar.gz",
+      "rust_tools": [
+        "clippy-driver",
+        "rustc",
+        "rustdoc"
+      ],
+      "sha256": "7454011b1de19624865f8601774baa9d82cb7b384a1ac4a428a0ee788bbb7ebf",
+      "size": 338815062,
+      "strip_prefix": "xbox360-toolchain-x86_64-pc-windows-msvc",
+      "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-17e188e5bd9f/xbox360-toolchain-x86_64-pc-windows-msvc.tar.gz"
+    },
+    "x86_64-unknown-linux-gnu": {
+      "blake3": "80b6fb993a31caa97e0bba7abbe73061d7f2a4bedba3da409b0fdf23bf3a78ae",
+      "format": "tar.xz",
+      "llvm_tools": [
+        "FileCheck",
+        "clang",
+        "clang++",
+        "clang-cpp",
+        "ld.lld",
+        "llc",
+        "lld",
+        "llvm-addr2line",
+        "llvm-ar",
+        "llvm-dwarfdump",
+        "llvm-mc",
+        "llvm-nm",
+        "llvm-objcopy",
+        "llvm-objdump",
+        "llvm-ranlib",
+        "llvm-readelf",
+        "llvm-readobj",
+        "llvm-size",
+        "llvm-strings",
+        "llvm-strip",
+        "llvm-symbolizer",
+        "opt",
+        "rust-lld"
+      ],
+      "name": "xbox360-toolchain-x86_64-unknown-linux-gnu.tar.xz",
+      "rust_tools": [
+        "clippy-driver",
+        "rustc",
+        "rustdoc"
+      ],
+      "sha256": "42d260fa11bac40e99d190ebe1448d38ff6bac150293e72517a84a6ff237dcce",
+      "size": 311600184,
+      "strip_prefix": "xbox360-toolchain-x86_64-unknown-linux-gnu",
+      "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-17e188e5bd9f/xbox360-toolchain-x86_64-unknown-linux-gnu.tar.xz"
+    }
+  },
+  "bootstrap_commit": "0f1673dc9abdef78697e31451ca4b0080bfe41e8",
+  "llvm_commit": "6184f76016c590ca1ddeafa568454eb379391b79",
+  "rust_commit": "a199a11abab9720154e5e2eff1887960432e8c95",
+  "schema": 2,
+  "source_commit": "f369053666c0d56176c8fdefd7d87f3dcc168c63",
+  "target_spec": "share/xbox360/targets/powerpc64-unknown-xbox360-ilp32.json",
+  "toolchain_inputs": {
+    "bootstrap_commit": "0f1673dc9abdef78697e31451ca4b0080bfe41e8",
+    "files": {
+      "buck/custom_toolchain.bzl": "9e69ceb4c0e84db5cbe50d4cd421dbef85b582b63ed256bbb2e5177d7e472101",
+      "buck/toolchains.bzl": "8d85dd19c1468c5125bf2894dbfdd46cb1d3152d99b8eca978d897e7c54c3788",
+      "src/tools/package_toolchain.py": "05f0b9cb6a1c689bcca33478544427eb77de54e116f1d7f48da8ed2df25c8d98",
+      "src/tools/toolchain_fingerprint.py": "86869ae4d4561658ea63f707afcb6ca16b3f4580beea74ef04a6cb68c12025c7",
+      "targets/powerpc64-unknown-xbox360-ilp32.json": "bf3c79009dac0fa09e7b58f128f0deebea8bec01c67d0a388c1e716dd5aa25cf"
+    },
+    "llvm_commit": "6184f76016c590ca1ddeafa568454eb379391b79",
+    "rust_commit": "a199a11abab9720154e5e2eff1887960432e8c95",
+    "schema": 1,
+    "toolchain_key": "17e188e5bd9fc9b00d66edac7499e4175d025742cc2e19391bbf239b85e7b4e4"
+  },
+  "toolchain_key": "17e188e5bd9fc9b00d66edac7499e4175d025742cc2e19391bbf239b85e7b4e4"
+}
