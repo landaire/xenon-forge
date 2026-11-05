@@ -33,6 +33,8 @@ pub use xbox360_sync as sync;
 #[cfg(any(target_os = "xbox360", xbox360_docs))]
 pub use xbox360_system::console;
 #[cfg(any(target_os = "xbox360", xbox360_docs))]
+pub use xbox360_system::dashlaunch;
+#[cfg(any(target_os = "xbox360", xbox360_docs))]
 pub use xbox360_system::debug;
 #[cfg(any(target_os = "xbox360", xbox360_docs))]
 pub use xbox360_system::directory;
@@ -40,6 +42,8 @@ pub use xbox360_system::directory;
 pub use xbox360_system::expansion;
 #[cfg(any(target_os = "xbox360", xbox360_docs))]
 pub use xbox360_system::module;
+#[cfg(any(target_os = "xbox360", xbox360_docs))]
+pub use xbox360_system::memory;
 #[cfg(any(target_os = "xbox360", xbox360_docs))]
 pub use xbox360_system::pool;
 #[cfg(any(target_os = "xbox360", xbox360_docs))]

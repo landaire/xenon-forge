@@ -36,6 +36,10 @@ impl NtStatus {
     pub const SINGLE_STEP: Self = Self(0x8000_0004);
     /// Exception code of an access to an invalid address.
     pub const ACCESS_VIOLATION: Self = Self(0xc000_0005);
+    /// `STATUS_INVALID_PARAMETER`: an argument does not meet the service contract.
+    pub const INVALID_PARAMETER: Self = Self(0xc000_000d);
+    /// `STATUS_INVALID_SYSTEM_SERVICE`: the requested system service is unavailable.
+    pub const INVALID_SYSTEM_SERVICE: Self = Self(0xc000_001c);
     /// `STATUS_ARRAY_BOUNDS_EXCEEDED`: exception code of a trap instruction
     /// whose condition held.
     pub const ARRAY_BOUNDS_EXCEEDED: Self = Self(0xc000_008c);

@@ -109,6 +109,17 @@ impl FileTime {
         self.0
     }
 
+    /// Add `duration`, wrapping the interval count.
+    pub const fn wrapping_add(self, duration: Duration) -> Self {
+        let subsecond_intervals = duration.subsec_nanos().div_ceil(100) as u64;
+        let intervals = duration
+            .as_secs()
+            .wrapping_mul(Self::INTERVALS_PER_SECOND)
+            .wrapping_add(subsecond_intervals);
+
+        Self(self.0.wrapping_add(intervals))
+    }
+
     /// Time from `earlier` to `self`. `None` if `earlier` is later, as
     /// after a change of the system time.
     pub fn duration_since(self, earlier: Self) -> Option<Duration> {
