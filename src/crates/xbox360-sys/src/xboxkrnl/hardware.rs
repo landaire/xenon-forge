@@ -171,6 +171,9 @@ flags! {
         /// A development kit kernel: set by the static initializer of
         /// development kit kernels and clear in retail kernels.
         DEVKIT_KERNEL = 0x10,
+        /// XBDM's name for the same bit when it gates the automatic profile
+        /// setting.
+        AUTO_PROFILE = 0x10,
         HARD_DISK = 0x20,
         /// The kernel debugger is enabled at boot.
         KERNEL_DEBUGGER_ENABLED = 0x80,
