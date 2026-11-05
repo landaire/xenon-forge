@@ -12,13 +12,18 @@ Xbox360ClangInfo = provider(fields = {
 
 def _bootstrap_dist_impl(ctx: AnalysisContext) -> list[Provider]:
     if ctx.attrs.host_triple == None:
-        fail("the PPC64 toolchain builds only on x86_64 Linux hosts; use the default PPC32 toolchain")
+        fail("the PPC64 toolchain runs only on x86_64 Linux, arm64 macOS and x86_64 Windows hosts; use the default PPC32 toolchain")
+    if ctx.attrs.dist == None:
+        fail(
+            "the nightly toolchain pin has no archive for {}; set ".format(ctx.attrs.host_triple) +
+            "xbox360.ppc64_toolchain = source or name an archive with xbox360.ppc64_toolchain_url",
+        )
     dist = ctx.attrs.dist[DefaultInfo].default_outputs[0]
     return [
         DefaultInfo(default_output = dist),
         RustReleaseInfo(
             sysroot = dist,
-            executable_suffix = "",
+            executable_suffix = ctx.attrs.executable_suffix,
             host_triple = ctx.attrs.host_triple,
         ),
     ]
@@ -28,12 +33,25 @@ def _bootstrap_dist_impl(ctx: AnalysisContext) -> list[Provider]:
 bootstrap_dist = rule(
     impl = _bootstrap_dist_impl,
     attrs = {
-        "dist": attrs.exec_dep(),
+        # None on a host that the prebuilt pin has no archive for.
+        "dist": attrs.option(attrs.exec_dep()),
+        "executable_suffix": attrs.default_only(attrs.string(default = select({
+            "DEFAULT": "",
+            "prelude//os:windows": ".exe",
+        }))),
         "host_triple": attrs.default_only(attrs.option(attrs.string(), default = select({
             "DEFAULT": None,
             "prelude//os:linux": select({
                 "DEFAULT": None,
                 "prelude//cpu:x86_64": "x86_64-unknown-linux-gnu",
+            }),
+            "prelude//os:macos": select({
+                "DEFAULT": None,
+                "prelude//cpu:arm64": "aarch64-apple-darwin",
+            }),
+            "prelude//os:windows": select({
+                "DEFAULT": None,
+                "prelude//cpu:x86_64": "x86_64-pc-windows-msvc",
             }),
         }))),
     },

@@ -3,8 +3,28 @@
 DEFAULT_PPC64_TOOLCHAIN = "prebuilt"
 
 NIGHTLY_TOOLCHAIN = {
-    "sha256": "91e01240fbd0f701efea46959e629a88fb299ea6adc935f293fb33ede2b6dd58",
-    "source_commit": "4fbeecd9784bb811a4efd1bd3ae3d7d8d9a530f5",
-    "strip_prefix": "xbox360-toolchain-x86_64-unknown-linux-gnu",
-    "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-8ac3b4bc24e5/xbox360-toolchain-x86_64-unknown-linux-gnu.tar.xz",
+    "hosts": {
+        "linux": {
+            "x86_64": {
+                "sha256": "720535e797486ab72dc208b65d2cc019b88fbd9d13b176f6d871481cbd73c0ae",
+                "strip_prefix": "xbox360-toolchain-x86_64-unknown-linux-gnu",
+                "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-c9997c1d885d/xbox360-toolchain-x86_64-unknown-linux-gnu.tar.xz",
+            },
+        },
+        "macos": {
+            "arm64": {
+                "sha256": "e037b503e12da3d122b66e4364d609cee9b25cf8993415ac6f7c1eacaa049b8e",
+                "strip_prefix": "xbox360-toolchain-aarch64-apple-darwin",
+                "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-c9997c1d885d/xbox360-toolchain-aarch64-apple-darwin.tar.xz",
+            },
+        },
+        "windows": {
+            "x86_64": {
+                "sha256": "777bad411ca3e82fdeb69ae6813da105f829df6c3e72c2254ea081acdcd9ed51",
+                "strip_prefix": "xbox360-toolchain-x86_64-pc-windows-msvc",
+                "url": "https://github.com/landaire/xenon-forge/releases/download/toolchain-nightly-c9997c1d885d/xbox360-toolchain-x86_64-pc-windows-msvc.tar.gz",
+            },
+        },
+    },
+    "source_commit": "a0e1737130259f114fd176cea02984cafa1ed974",
 }

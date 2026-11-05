@@ -145,17 +145,15 @@ You can also debug from something like VS Code using:
 bin/buck2 build //games:launcher[vscode] --show-output
 ```
 
-### PPC64
+### PPC64 ILP32
 
-If you wish to target PPC64, you can use any of the standard `buck2` commands and explicitly pass `--target-platforms xbox360//platforms:ppc64`.
-
-For example:
+Use `-m ppc64-ilp32` to select the custom Rust and LLVM toolchain:
 
 ```shell
-bin/buck2 build //examples/hello:hello --target-platforms xbox360//platforms:ppc64 --show-output
+bin/buck2 build -m ppc64-ilp32 //src/examples/hello:hello --show-output
 ```
 
-This will grab and/or build the required custom LLVM toolchain.
+Buck2 downloads a checksum-pinned prebuilt toolchain on Linux x86_64, macOS arm64, and Windows x86_64. Set `xbox360.ppc64_toolchain = source` in `.buckconfig.local` to build it from source instead.
 
 ## Components
 

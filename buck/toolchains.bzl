@@ -32,11 +32,7 @@ def _by_codegen(ppc32, ppc64):
         "DEFAULT": ppc32,
     })
 
-def _config_or_default(name: str, default: str) -> str:
-    value = read_root_config("xbox360", name, "")
-    return value if value else default
-
-def _ppc64_distributions() -> tuple[str, ...]:
+def _ppc64_distributions():
     mode = read_root_config(
         "xbox360",
         "ppc64_toolchain",
@@ -50,16 +46,37 @@ def _ppc64_distributions() -> tuple[str, ...]:
     if mode != "prebuilt":
         fail("xbox360.ppc64_toolchain must be `source` or `prebuilt`, not `{}`".format(mode))
 
-    prebuilt_toolchain_archive(
-        name = "ppc64-prebuilt",
-        url = _config_or_default("ppc64_toolchain_url", NIGHTLY_TOOLCHAIN["url"]),
-        sha256 = _config_or_default("ppc64_toolchain_sha256", NIGHTLY_TOOLCHAIN["sha256"]),
-        strip_prefix = _config_or_default(
-            "ppc64_toolchain_strip_prefix",
-            NIGHTLY_TOOLCHAIN["strip_prefix"],
-        ),
-    )
-    return (":ppc64-prebuilt", ":ppc64-prebuilt")
+    # An archive that the configuration names, for whichever host builds.
+    url = read_root_config("xbox360", "ppc64_toolchain_url", "")
+    if url:
+        prebuilt_toolchain_archive(
+            name = "ppc64-prebuilt",
+            url = url,
+            sha256 = read_root_config("xbox360", "ppc64_toolchain_sha256", ""),
+            strip_prefix = read_root_config("xbox360", "ppc64_toolchain_strip_prefix", ""),
+        )
+        return (":ppc64-prebuilt", ":ppc64-prebuilt")
+
+    hosts = NIGHTLY_TOOLCHAIN["hosts"]
+    for os_name, cpus in hosts.items():
+        for cpu, archive in cpus.items():
+            prebuilt_toolchain_archive(
+                name = "ppc64-prebuilt-{}-{}".format(os_name, cpu),
+                url = archive["url"],
+                sha256 = archive["sha256"],
+                strip_prefix = archive["strip_prefix"],
+            )
+
+    # bootstrap_dist reaches the archive through an exec dep, so this selects
+    # by the host that runs the compiler.
+    archive = select({"DEFAULT": None} | {
+        "prelude//os:" + os_name: select({"DEFAULT": None} | {
+            "prelude//cpu:" + cpu: ":ppc64-prebuilt-{}-{}".format(os_name, cpu)
+            for cpu in cpus
+        })
+        for os_name, cpus in hosts.items()
+    })
+    return (archive, archive)
 
 def xbox360_toolchains(
         rustc_flags = [],
@@ -211,7 +228,10 @@ def xbox360_toolchains(
             # The host linker driver runs with `-fuse-ld=lld`. The Rust
             # release ships that lld; the source-built compiler finds the
             # one of its LLVM.
-            "DEFAULT": rustc_flags + _by_codegen([], ["-Clink-arg=-B$(location :llvm-ppc64)/bin"]),
+            "DEFAULT": rustc_flags + _by_codegen([], select({
+                "DEFAULT": [],
+                "prelude//os:linux": ["-Clink-arg=-B$(location :llvm-ppc64)/bin"],
+            })),
         }),
         rustdoc_flags = rustdoc_flags,
         rustc_target_triple = select({

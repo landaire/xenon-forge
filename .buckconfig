@@ -19,7 +19,7 @@
 
 [external_cell_rustc_bootstrap]
   git_origin = https://github.com/landaire-contrib/buck2-rustc-bootstrap
-  commit_hash = 02ee4260ced11b7d49c71445e10dd660cfebae84
+  commit_hash = 0f1673dc9abdef78697e31451ca4b0080bfe41e8
 
 [parser]
   target_platform_detector_spec = target:xbox360//...->prelude//platforms:default \
