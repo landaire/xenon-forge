@@ -595,6 +595,7 @@ _EXECUTABLE_ATTRS = {
     "srcs": attrs.list(attrs.source(), default = []),
     "_rust_lld": attrs.exec_dep(providers = [RunInfo], default = "toolchains//:rust-lld"),
     "_rust_toolchain": toolchains_common.rust(),
+    "_xex_link": attrs.exec_dep(providers = [RunInfo], default = "xbox360//src/crates/xex-link:xex-link"),
 }
 
 # A binary crate for the console. The rules configure themselves for the
