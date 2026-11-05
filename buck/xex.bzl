@@ -500,6 +500,7 @@ def _check_rustc_flags(flags: list[str]):
 def _xbox360_executable_impl(ctx: AnalysisContext) -> list[Provider]:
     toolchain = ctx.attrs._rust_toolchain[RustToolchainInfo]
     _check_rustc_flags(ctx.attrs.rustc_flags)
+    link_script = ctx.attrs.link_script or _generated_link_script(ctx, ctx.attrs.manifest)
     sysroot = toolchain.explicit_sysroot_deps
     compiler_builtins = [dep for dep in sysroot.others if dep[RustLinkInfo].crate.simple == "compiler_builtins"]
     len(compiler_builtins) == 1 or fail("the toolchain provides no compiler_builtins")
@@ -540,7 +541,7 @@ def _xbox360_executable_impl(ctx: AnalysisContext) -> list[Provider]:
             # as with the prelude's Rust rules.
             "-Zremap-cwd-prefix=.",
             cmd_args(ctx.attrs._rust_lld[RunInfo], format = "-Clinker={}"),
-            cmd_args(ctx.attrs.link_script, format = "-Clink-arg=-T{}"),
+            cmd_args(link_script, format = "-Clink-arg=-T{}"),
             "-Clink-arg=--no-rosegment",
             "-Cstrip=symbols",
             toolchain.rustc_flags,
@@ -571,7 +572,7 @@ def _xbox360_executable_impl(ctx: AnalysisContext) -> list[Provider]:
             assembly = assembly,
             compiler_builtins = _rlib(compiler_builtins[0]),
             image = image,
-            link_script = ctx.attrs.link_script,
+            link_script = link_script,
             object = obj,
         ),
     ]
@@ -585,8 +586,10 @@ _EXECUTABLE_ATTRS = {
     "env": attrs.dict(attrs.string(), attrs.string(), default = {}),
     "features": attrs.list(attrs.string(), default = []),
     "labels": attrs.list(attrs.string(), default = []),
-    # GNU ld script that places the sections.
-    "link_script": attrs.source(),
+    # The manifest from which xex-link generates the GNU ld script.
+    "manifest": attrs.option(attrs.source(), default = None),
+    # An explicit script overrides the one generated from `manifest`.
+    "link_script": attrs.option(attrs.source(), default = None),
     # Flags that change the link are rejected; see `_check_rustc_flags`.
     "rustc_flags": attrs.list(attrs.string(), default = []),
     "srcs": attrs.list(attrs.source(), default = []),

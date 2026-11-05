@@ -38,6 +38,9 @@ SECTIONS {{
     . = ALIGN({page:#x});
     .bss : {{ *(.bss .bss.*) *(.sbss .sbss.*) *(COMMON) }}
 
+    . = ALIGN(4);
+    .xexports : {{ KEEP(*(.xexports)) }}
+
     /DISCARD/ : {{ *(.eh_frame) *(.eh_frame_hdr) *(.comment) *(.note .note.*) }}
 }}
 ",
@@ -64,5 +67,14 @@ mod tests {
         assert!(script.contains(". = 0x91d01000;"), "{script}");
         assert!(script.contains("ALIGN(0x1000)"), "{script}");
         assert!(!script.contains("ALIGN(0x10000)"), "{script}");
+    }
+
+    #[test]
+    fn keeps_export_records() {
+        let script = link_script(&Manifest::default());
+        assert!(
+            script.contains(".xexports : { KEEP(*(.xexports)) }"),
+            "{script}"
+        );
     }
 }
