@@ -1,3 +1,4 @@
+load("@prelude//platforms:defs.bzl", "host_configuration")
 load("//buck:platforms.bzl", "execution_platforms", "host_execution_platform", "host_tool_build_transition", "sysroot_build_transition")
 
 # Host targets use the detected host platform. Xbox targets enter the
@@ -176,8 +177,10 @@ host_tool_build_transition(
 # configurations build there, with the compiler that loads them.
 host_execution_platform(
     name = "host-ppc64",
-    base = "prelude//platforms:default",
     constraint_values = [":codegen[ppc64-ilp32]"],
+    cpu_configuration = host_configuration.cpu,
+    os_configuration = host_configuration.os,
+    use_windows_path_separators = host_info().os.is_windows,
 )
 
 # `[build] execution_platforms` of projects that use this cell.

@@ -3,8 +3,9 @@
 load("@prelude//cfg/exec_platform:marker.bzl", "get_exec_platform_marker")
 
 def _host_execution_platform_impl(ctx: AnalysisContext) -> list[Provider]:
-    base = ctx.attrs.base[ExecutionPlatformInfo]
-    constraints = dict(base.configuration.constraints)
+    constraints = dict()
+    constraints.update(ctx.attrs.cpu_configuration[ConfigurationInfo].constraints)
+    constraints.update(ctx.attrs.os_configuration[ConfigurationInfo].constraints)
     for value in ctx.attrs.constraint_values:
         info = value[ConstraintValueInfo]
         constraints[info.setting.label] = info
@@ -14,18 +15,24 @@ def _host_execution_platform_impl(ctx: AnalysisContext) -> list[Provider]:
             label = ctx.label.raw_target(),
             configuration = ConfigurationInfo(
                 constraints = constraints,
-                values = base.configuration.values,
+                values = {},
             ),
-            executor_config = base.executor_config,
+            executor_config = CommandExecutorConfig(
+                local_enabled = True,
+                remote_enabled = False,
+                use_windows_path_separators = ctx.attrs.use_windows_path_separators,
+            ),
         ),
     ]
 
-# `base` with `constraint_values` added.
+# The detected host execution platform with `constraint_values` added.
 host_execution_platform = rule(
     impl = _host_execution_platform_impl,
     attrs = {
-        "base": attrs.dep(providers = [ExecutionPlatformInfo]),
         "constraint_values": attrs.list(attrs.dep(providers = [ConstraintValueInfo])),
+        "cpu_configuration": attrs.dep(providers = [ConfigurationInfo]),
+        "os_configuration": attrs.dep(providers = [ConfigurationInfo]),
+        "use_windows_path_separators": attrs.bool(),
     },
 )
 
